@@ -18,6 +18,6 @@ Known issues
 
 - The memory handling system can't cope with cyclic references yet. This happens also with functions, blocks, etc. within contexts, because of binding rules.
 
-- Operators doesn't support lit-words as their first argument.
+- Operators don't support literals as their first argument, as functions do.
 
 - Routines can't handle all possible types of arguments.
