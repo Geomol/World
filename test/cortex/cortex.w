@@ -1,0 +1,8 @@
+[0.0 = (e - exp 1)]
+[-1 = negate 1]
+[false = not true]
+[true = not false]
+[true = not none]
+[1.4142135623730951 = sqrt 2]
+[true = zero? 0]
+[true = zero? 0.0]

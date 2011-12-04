@@ -1,0 +1,6 @@
+[binary! = type? #{00}]
+[binary! <> type? 1]
+[#{} == make binary! 0]
+[#{00} == to binary! "^@"]
+[binary! <> #{}]
+[binary! == type? #{}]

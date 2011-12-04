@@ -1,0 +1,5 @@
+[unset! == type? ()]
+[unset! <> type? 1]
+[unset! == type? make unset! none]
+[unset! == type? to unset! none]
+[unset! == type? to unset! 1]
