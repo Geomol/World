@@ -1,0 +1,23 @@
+This is an alpha release. For testing only. Use at your own risk. Do not distribute.
+
+To run a test
+-------------
+Pick one of the world_*.dat files and rename it to 'world'. Then make it executable.
+Also download "cortex.w" and the test/ directory.
+Start world from a terminal.
+At the world prompt do this:
+
+w> test		; should return true
+w> m		; will run a Mandelbrot example
+
+If it behaves this way, you're ready to go.
+Have fun!
+
+Known issues
+------------
+
+- The memory handling system can't cope with cyclic references yet. This happens also with functions, blocks, etc. within contexts, because of binding rules.
+
+- Operators doesn't support lit-words as their first argument.
+
+- Routines can't handle all possible types of arguments.
