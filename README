@@ -2,7 +2,7 @@ This is an alpha release. For testing only. Use at your own risk. Do not distrib
 
 To run a test
 -------------
-Pick one of the world_*.dat files and rename it to 'world'. Then make it executable.
+Pick one of the world_*.dat files and rename it to 'world' ('world.exe' under Windows). Then make it executable.
 Also download "cortex.w" and the test/ directory.
 Start world from a terminal.
 At the world prompt do this:
