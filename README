@@ -24,4 +24,8 @@ Known issues
 
 - Operators don't support literals as their first argument, as functions do.
 
-- Routines can't handle all possible types of arguments.
+- Routines can't handle all possible types of arguments (struct).
+
+- date! and time! is only partly implemented.
+
+- Even if the OS X version is 64-bit, much of the internals don't utilize this yet.
