@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		2-Dec-2011
-	Version:	0.5.9
+	Date:		5-Dec-2011
+	Version:	0.5.10
 	History: [
+		0.5.10	[05-12-2011	JN	{Added routine! to help}]
 		0.5.9	[02-12-2011	JN	{Added license
 								 Removed compile from loop
 								 Added min
@@ -495,7 +496,7 @@ dump-obj: make function! [[
 ?: help: make function! [[
 	"Prints information about words and values."
 	'word
-	/local value args item item2 att
+	/local value args item arg-no item2 att
 ][
 	if false = value? 'word [
 		print {To use help, supply a word or value as its
@@ -555,11 +556,36 @@ More information: http://world-lang.org
 	][
 		prin mold word
 		item: args/1
-		while [item and ((:item <> /local) or (string! = type? args/2))] [
-			if (string! <> type? :item) and (block! <> type? :item) [
-				prin ["" mold :item]
+		either function! = type? :value [
+			while [item and ((:item <> /local) or (string! = type? args/2))] [
+				if (string! <> type? :item) and (block! <> type? :item) [
+					prin ["" mold :item]
+				]
+				item: pick next 'args 1
 			]
-			item: pick next 'args 1
+		][	; routine!
+			while [word! <> type? :item] [
+				item: pick next 'args 1
+			]
+			args: skip args 2
+			item: pick args 1
+			if block! = type? :item [
+				arg-no: 1
+				while [0 < length? item] [
+					either word! = type? pick item 1 [
+						prin ["" mold pick item 1]
+						next 'item
+					][
+						prin " arg"
+						prin arg-no
+					]
+					next 'arg-no
+					item: skip item 2
+					if string! = type? pick item 1 [
+						next 'item
+					]
+				]
+			]
 		]
 	]
 	args: skip args (- (index? args) - 1)
@@ -581,41 +607,83 @@ More information: http://world-lang.org
 	][
 		att: none
 	]
-	if find [word! lit-word!] type?/word :item [
-		print "^/Arguments:"
-		while [item and (refinement! <> type? :item)] [
-			prin ["   " item "-- "]
-			item: pick next 'args 1
-			either item [
-				either string! = type? :item [
-					prin [item "["]
-					item: pick next 'args 1
-					either block! = type? :item [
-						prin item
-						prin "]"
+	either function! = type? :value [
+		if find [word! lit-word!] type?/word :item [
+			print "^/Arguments:"
+			while [item and (refinement! <> type? :item)] [
+				prin ["   " item "-- "]
+				item: pick next 'args 1
+				either item [
+					either string! = type? :item [
+						prin [item "["]
 						item: pick next 'args 1
+						either block! = type? :item [
+							prin item
+							prin "]"
+							item: pick next 'args 1
+						][
+							prin "any-type!]"
+						]
 					][
-						prin "any-type!]"
+						either block! = type? :item [
+							item2: pick next 'args 1
+							if string! = type? :item2 [
+								prin [item2 ""]
+								item2: pick next 'args 1
+							]
+							prin "["
+							prin item
+							prin "]"
+							item: :item2
+						][
+							prin "[any-type!]"
+						]
 					]
 				][
-					either block! = type? :item [
-						item2: pick next 'args 1
-						if string! = type? :item2 [
-							prin [item2 ""]
-							item2: pick next 'args 1
+					prin "[any-type!]"
+				]
+				print ""
+			]
+		]
+	][
+		if routine! = type? :value [
+			args: skip args 2
+			item: pick args 1
+			if block! = type? :item [
+				if 0 < length? item [
+					print "^/Arguments:"
+					arg-no: 1
+					while [0 < length? item] [
+						either word! = type? pick item 1 [
+							prin ["   " item/1 "-- "]
+							next 'item
+						][
+							prin "    arg"
+							prin [arg-no "-- "]
 						]
-						prin "["
-						prin item
-						prin "]"
-						item: :item2
-					][
-						prin "[any-type!]"
+						either string! = type? pick item 3 [
+							prin [pick item 3 ""]
+							print mold pick item 1
+							next 'item
+						][
+							print mold pick item 1
+						]
+						next 'arg-no
+						item: skip item 2
 					]
 				]
-			][
-				prin "[any-type!]"
+				next 'args
 			]
-			print ""
+			item: pick args 1
+			if item <> 'void [
+				item: pick next 'args 1
+				print "^/Returns:"
+				either :item == none [
+					print "    (unknown)"
+				][
+					print ["   " mold :item]
+				]
+			]
 		]
 	]
 	if (refinement! = type? :item) and ((item <> /local) or (string! = type? args/2)) [
