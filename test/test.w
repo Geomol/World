@@ -32,8 +32,10 @@ do-tests %functions/function.w
 do-tests %functions/control/loop.w
 do-tests %functions/datatype/to.w
 do-tests %functions/math/round.w
+do-tests %functions/series/copy.w
 do-tests %functions/series/parse.w
 do-tests %functions/series/remove.w
+do-tests %functions/series/trim.w
 do-tests %functions/system/compile.w
 
 do-tests %cortex/cortex.w

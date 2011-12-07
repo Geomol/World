@@ -284,11 +284,6 @@ loop: make function! [[
 	count [integer!] "Number of repetitions"
 	block [block!] "Block to evaluate each time"
 ][
-	;if false = compiled? block [
-		;compile/at block 'loop
-		;compile/at block block
-		;compile block
-	;]
 	while [0 <= count: count - 1] block
 ]]
 native: make function! [[
@@ -879,7 +874,7 @@ not: make function! [[
 ][
 	either none = :value or (false = :value) [true][false]
 ]]
-; NB!! random is not final and will most likely become a native function
+; TODO NB!! random is not final and will most likely become a native function
 rseed: 1
 random: make function! [[
 	"Random value of the same datatype."
@@ -1125,7 +1120,6 @@ empty?: make function! [[
 ][
 	0 = length? skip series (- (index? series) - 1)
 ]]
-;empty?: tail?: make function! [[
 tail?: make function! [[
 	"True if a series is at its tail."
 	series [series!]
@@ -2375,7 +2369,7 @@ parse-url: make function! [[
 ]	; net-utils
 ;]	; comment
 
-; World doesn't like the next line!? Making some strange mem problems.
+; TODO World doesn't like the next line!? Making some strange mem problems.
 ;c: make function! [[][do %cortex.w]]
 m: make function! [[][do %test/cmandelbrot.w]]
 test: make function! [[][do %test/test.w]]
