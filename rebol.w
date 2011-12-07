@@ -1,8 +1,9 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		2-Dec-2011
-	Version:	0.0.14
+	Date:		7-Dec-2011
+	Version:	0.0.15
 	History: [
+		0.0.15	[07-12-2011	JN	{Added with}]
 		0.0.14	[02-12-2011	JN	{Added maximum
 								 Added minimum
 								 Added maximum-of
@@ -140,6 +141,15 @@ strict-not-equal?: make function! [[
 	value2
 ][
 	:value1 <> :value2 and ((type? :value1) <> type? :value2)
+]]
+
+; Context
+with: make function! [[
+	"Executes a block at a context"
+	obj [context!]
+	body [block!]
+][
+	do compile/at body obj
 ]]
 
 ; Control
