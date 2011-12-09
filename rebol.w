@@ -1,8 +1,10 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		7-Dec-2011
-	Version:	0.0.15
+	Date:		9-Dec-2011
+	Version:	0.0.16
 	History: [
+		0.0.16	[09-12-2011	JN	{Added as-binary
+								 Added as-string}]
 		0.0.15	[07-12-2011	JN	{Added with}]
 		0.0.14	[02-12-2011	JN	{Added maximum
 								 Added minimum
@@ -175,6 +177,18 @@ function: make function! [[
 ]]
 
 ; Datatype
+as-binary: make function! [[
+	"Coerces any type of string into a binary! datatype without copying it."
+	string [any-string!]
+][
+	as binary! string
+]]
+as-string: make function! [[
+	"Coerces any type of string into a string! datatype without copying it."
+	string [any-string!]
+][
+	as string! string
+]]
 decimal?:	:real?
 op?:		:operator?
 native?: make function! [[
