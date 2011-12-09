@@ -284,6 +284,11 @@ loop: make function! [[
 	count [integer!] "Number of repetitions"
 	block [block!] "Block to evaluate each time"
 ][
+	;if false = compiled? block [
+		;compile/at block 'loop
+		;compile/at block block
+		;compile block
+	;]
 	while [0 <= count: count - 1] block
 ]]
 native: make function! [[
