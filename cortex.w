@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		5-Dec-2011
-	Version:	0.5.10
+	Date:		10-Dec-2011
+	Version:	0.5.11
 	History: [
+		0.5.11	[10-12-2011	JN	{Added sys-utils}]
 		0.5.10	[05-12-2011	JN	{Added routine! to help}]
 		0.5.9	[02-12-2011	JN	{Added license
 								 Removed compile from loop
@@ -107,8 +108,6 @@ system/schemes: make system/schemes [
 	]
 ]
 }
-
-system/state/last-error: make system/standard/error []
 
 e:			2.718281828459045
 pi:			3.141592653589793
@@ -2299,6 +2298,26 @@ include: make function! [[
 	insert skip do-file length? do-file file
 	do do-file
 ]]
+;comment [
+sys-utils: make context! [
+	print-last-error: make function! [[
+		/local err id
+	][
+		err: select system/standard/errors system/state/last-error/type
+		prin "** "
+		prin err/type
+		prin ": "
+		id: select err system/state/last-error/id
+		print either block! = type? id [
+			compile/at id system/state/last-error
+		][
+			id
+		]
+		prin "** Near: "
+		print system/state/last-error/near
+	]]
+]
+;]	; comment
 
 ; Additional functionality
 ;comment [
