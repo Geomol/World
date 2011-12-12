@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		11-Dec-2011
-	Version:	0.5.12
+	Date:		12-Dec-2011
+	Version:	0.5.13
 	History: [
+		0.5.13	[12-12-2011	JN	{Added type check to append}]
 		0.5.12	[11-12-2011	JN	{Added compile/reset to append}]
 		0.5.11	[10-12-2011	JN	{Added sys-utils}]
 		0.5.10	[05-12-2011	JN	{Added routine! to help}]
@@ -1137,7 +1138,9 @@ append: make function! [[
 	value
 	/only "Appends a series as a series"
 ][
-	compile/reset series
+	if block! = type? series [
+		compile/reset series
+	]
 	head either only [
 		insert/only skip series length? series :value
 	][
