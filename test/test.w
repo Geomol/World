@@ -29,7 +29,7 @@ do-tests %math/unary-minus.w
 do-tests %math/paren.w
 
 do-tests %functions/function.w
-do-tests %functions/control/loop.w
+do-tests %functions/control/all.w
 do-tests %functions/datatype/to.w
 do-tests %functions/math/round.w
 do-tests %functions/series/copy.w
