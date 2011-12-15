@@ -1,8 +1,11 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		13-Dec-2011
-	Version:	0.5.14
+	Date:		15-Dec-2011
+	Version:	0.5.15
 	History: [
+		0.5.15	[15-12-2011	JN	{Added routine
+								 Added ??
+								 Fixed bug in foreach}]
 		0.5.14	[13-12-2011	JN	{Added struct}]
 		0.5.13	[12-12-2011	JN	{Added type check to append}]
 		0.5.12	[11-12-2011	JN	{Added compile/reset to append}]
@@ -234,7 +237,9 @@ foreach: make function! [[
 	/local do-body spec
 ][
 	if 0 < length? data [
-		spec: [[throw] data /local]
+		spec: []
+		remove/part spec length? spec	; clear, to avoid copy
+		insert spec [[throw] data /local]
 		append spec :word
 		either block! = type? word [
 			insert body reduce [word 'data]
@@ -329,6 +334,12 @@ repeat: make function! [[
 		start: start + 1
 		do-body start
 	]
+]]
+routine: make function! [[
+	"Define a library routine"
+	spec [block!] {"Description" followed by library, routine name, arguments and return type}
+][
+	make routine! spec
 ]]
 struct: make function! [[
 	"Defines a structure."
@@ -752,6 +763,20 @@ More information: http://world-lang.org
 		]
 	]
 	prin ""
+]]
+??: make function! [[
+    {Prints a variable name followed by its molded value. (debugging)} 
+    'name
+	/local s
+][
+    print either word! = type? :name [
+		s: form name
+		insert skip s length? s reduce [": " mold name: get :name]	; TODO Why get-word! (?? loop) ?
+		s
+	][
+		mold :name
+	] 
+    :name
 ]]
 source: make function! [[
 	"Prints the source code for a word."
