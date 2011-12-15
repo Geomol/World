@@ -4,7 +4,7 @@
  */
 
 
-#include <stdio.h>	// puts
+//#include <stdio.h>	// puts
 #include <unistd.h>
 
 #include <string.h>
@@ -24,34 +24,34 @@ int open_socket (Socket_Spec *spec) {
 	if (spec->node == NULL) {	/* listening */
 		hints.ai_flags	= AI_PASSIVE;
 		if ((status = getaddrinfo (NULL, spec->service, &hints, &servinfo)) != 0) {
-			puts ("**** getaddrinfo error ****");
+			//puts ("**** getaddrinfo error ****");
 			return -1;
 		}
 		if ((sockfd = socket (servinfo->ai_family, servinfo->ai_socktype,
 						servinfo->ai_protocol)) == -1) {
-			puts ("**** socket error ****");
+			//puts ("**** socket error ****");
 			return -1;
 		}
 		if ((status = setsockopt (sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (int))) == -1) {
-			puts ("**** setsockopt error ****");
+			//puts ("**** setsockopt error ****");
 			return -1;
 		}
 		if ((status = bind (sockfd, servinfo->ai_addr, servinfo->ai_addrlen)) != 0) {
-			puts ("**** bind error ****");
+			//puts ("**** bind error ****");
 			return -1;
 		}
 		if ((status = listen (sockfd, SOMAXCONN)) != 0) {
-			puts ("**** listen error ****");
+			//puts ("**** listen error ****");
 			return -1;
 		}
 	} else {
 		if ((status = getaddrinfo (spec->node, spec->service, &hints, &servinfo)) != 0) {
-			puts ("**** getaddrinfo error ****");
+			//puts ("**** getaddrinfo error ****");
 			return -1;
 		}
 		if ((sockfd = socket (servinfo->ai_family, servinfo->ai_socktype,
 						servinfo->ai_protocol)) == -1) {
-			puts ("**** socket error ****");
+			//puts ("**** socket error ****");
 			return -1;
 		}
 		connect (sockfd, servinfo->ai_addr, servinfo->ai_addrlen);

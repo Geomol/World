@@ -15,11 +15,11 @@ If it behaves this way, you're ready to go.
 Follow: http://world-lang.org
 World at GitHub: https://github.com/Geomol/World
 
+Have fun!
+
 To get help at the World prompt:
 
 w> help
-
-Have fun!
 
 Known issues
 ------------
@@ -27,8 +27,6 @@ Known issues
 - The memory handling system can't cope with cyclic references yet. This happens also with functions, blocks, etc. within contexts, because of binding rules.
 
 - Operators don't support literals as their first argument, as functions do.
-
-- Routines can't handle all possible types of arguments (struct).
 
 - date! and time! is only partly implemented.
 

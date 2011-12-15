@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		12-Dec-2011
-	Version:	0.5.13
+	Date:		13-Dec-2011
+	Version:	0.5.14
 	History: [
+		0.5.14	[13-12-2011	JN	{Added struct}]
 		0.5.13	[12-12-2011	JN	{Added type check to append}]
 		0.5.12	[11-12-2011	JN	{Added compile/reset to append}]
 		0.5.11	[10-12-2011	JN	{Added sys-utils}]
@@ -328,6 +329,13 @@ repeat: make function! [[
 		start: start + 1
 		do-body start
 	]
+]]
+struct: make function! [[
+	"Defines a structure."
+	spec [block!] {"Description" followed by datatypes and arguments (opt string)}
+	values [block! none! word!] "Initial values"
+][
+	make struct! reduce [spec values]
 ]]
 switch: make function! [[
 	"Selects a choice and evaluates the block that follows it."

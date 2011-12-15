@@ -4,7 +4,7 @@
  */
 
 
-#include <stdio.h>	// puts
+//#include <stdio.h>	// puts
 #include <unistd.h>
 
 #include <string.h>
@@ -26,11 +26,11 @@ int open_socket (Socket_Spec *spec) {
 	int status, sockfd;
 	if (spec->node == NULL) {	/* listening */
 		if ((sockfd = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-			puts ("**** socket error ****");
+			//puts ("**** socket error ****");
 			return -1;
 		}
 		if ((status = setsockopt (sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (int))) == -1) {
-			puts ("**** setsockopt error ****");
+			//puts ("**** setsockopt error ****");
 			return -1;
 		}
 		struct sockaddr_in my_addr;
@@ -40,12 +40,12 @@ int open_socket (Socket_Spec *spec) {
 		memset(my_addr.sin_zero, '\0', sizeof (my_addr.sin_zero));
 		bind(sockfd, (struct sockaddr *)&my_addr, sizeof (my_addr));
 		if ((status = listen (sockfd, SOMAXCONN)) != 0) {
-			puts ("**** listen error ****");
+			//puts ("**** listen error ****");
 			return -1;
 		}
 	} else {
 		if ((sockfd = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-			puts ("**** socket error ****");
+			//puts ("**** socket error ****");
 			return -1;
 		}
 		struct sockaddr_in my_addr;

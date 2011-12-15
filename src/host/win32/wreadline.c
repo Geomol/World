@@ -48,18 +48,25 @@ void free_history () {
 #define KEY_DEL		'S'
 
 
-char *w_readline (char *prompt) {
+char *w_readline (int *auto_brackets) {
 	int ch, i, pos = 0, line_tail = 0;
 	unsigned int line_size = 256;
 	char *line = realloc (NULL, line_size);
 	if (line == NULL) return NULL;
 	line[0] = '\0';
-	if (prompt) fputs (prompt, stdout);
 	fflush (stdout);
 	ch = getch ();
 	int stop_it = 0;
 	while (ch != KEY_CR && !stop_it) {
 		switch (ch) {
+			case KEY_CTRL_A:
+				*auto_brackets = 1 - *auto_brackets;
+				break;
+			case KEY_CTRL_D:
+				putchar ('\n');
+				line[0] = KEY_CTRL_D;
+				return line;
+				break;
 			case KEY_TAB:
 				/* TODO tab completion */
 				break;
@@ -192,149 +199,163 @@ char *w_readline (char *prompt) {
 				}
 				break;
 			default:
-				switch (ch) {
-					case '\"':
-						if (line[pos] == '\"') {
-							putchar ('\"');
-							pos++;
-						} else {
+				if (*auto_brackets) {
+					switch (ch) {
+						case '\"':
+							if (line[pos] == '\"') {
+								putchar ('\"');
+								pos++;
+							} else {
+								line_tail++;
+								if (++line_tail >= line_size) {
+									line_size += 256;
+									line = realloc (line, line_size);
+								}
+								for (i=line_tail; i>pos+1; i--) line[i] = line[i-2];
+								line[pos++]	= '\"';
+								line[pos]	= '\"';
+								fputs (&line[pos - 1], stdout);
+								if (pos < line_tail) {
+									//printf ("\x1b[%dD", line_tail - pos);
+									i = line_tail - pos;
+									while (i--) putchar ('\b');
+								}
+							}
+							break;
+						case '(':
 							line_tail++;
 							if (++line_tail >= line_size) {
 								line_size += 256;
 								line = realloc (line, line_size);
 							}
 							for (i=line_tail; i>pos+1; i--) line[i] = line[i-2];
-							line[pos++]	= '\"';
-							line[pos]	= '\"';
-							fputs (&line[pos - 1], stdout);
-							if (pos < line_tail) {
-								//printf ("\x1b[%dD", line_tail - pos);
-								i = line_tail - pos;
-								while (i--) putchar ('\b');
-							}
-						}
-						break;
-					case '(':
-						line_tail++;
-						if (++line_tail >= line_size) {
-							line_size += 256;
-							line = realloc (line, line_size);
-						}
-						for (i=line_tail; i>pos+1; i--) line[i] = line[i-2];
-						line[pos++]	= '(';
-						line[pos]	= ')';
-						fputs (&line[pos - 1], stdout);
-						if (pos < line_tail) {
-							i = line_tail - pos;
-							while (i--) putchar ('\b');
-						}
-						break;
-					case ')':
-						if (line[pos] == ')') {
-							putchar (')');
-							pos++;
-						} else {
-							if (++line_tail == line_size) {
-								line_size += 256;
-								line = realloc (line, line_size);
-							}
-							for (i=line_tail; i>pos; i--) line[i] = line[i-1];
-							line[pos++] = ')';
+							line[pos++]	= '(';
+							line[pos]	= ')';
 							fputs (&line[pos - 1], stdout);
 							if (pos < line_tail) {
 								i = line_tail - pos;
 								while (i--) putchar ('\b');
 							}
-						}
-						break;
-					case '[':
-						line_tail++;
-						if (++line_tail >= line_size) {
-							line_size += 256;
-							line = realloc (line, line_size);
-						}
-						for (i=line_tail; i>pos+1; i--) line[i] = line[i-2];
-						line[pos++]	= '[';
-						line[pos]	= ']';
-						fputs (&line[pos - 1], stdout);
-						if (pos < line_tail) {
-							i = line_tail - pos;
-							while (i--) putchar ('\b');
-						}
-						break;
-					case ']':
-						if (line[pos] == ']') {
-							putchar (']');
-							pos++;
-						} else {
-							if (++line_tail == line_size) {
-								line_size += 256;
-								line = realloc (line, line_size);
+							break;
+						case ')':
+							if (line[pos] == ')') {
+								putchar (')');
+								pos++;
+							} else {
+								if (++line_tail == line_size) {
+									line_size += 256;
+									line = realloc (line, line_size);
+								}
+								for (i=line_tail; i>pos; i--) line[i] = line[i-1];
+								line[pos++] = ')';
+								fputs (&line[pos - 1], stdout);
+								if (pos < line_tail) {
+									i = line_tail - pos;
+									while (i--) putchar ('\b');
+								}
 							}
-							for (i=line_tail; i>pos; i--) line[i] = line[i-1];
-							line[pos++] = ']';
-							fputs (&line[pos - 1], stdout);
-							if (pos < line_tail) {
-								i = line_tail - pos;
-								while (i--) putchar ('\b');
-							}
-						}
-						break;
-					case '{':
-						if (pos > 0 && line[pos - 1] == '#') {
+							break;
+						case '[':
 							line_tail++;
 							if (++line_tail >= line_size) {
 								line_size += 256;
 								line = realloc (line, line_size);
 							}
 							for (i=line_tail; i>pos+1; i--) line[i] = line[i-2];
-							line[pos++]	= '{';
-							line[pos]	= '}';
-						} else {
+							line[pos++]	= '[';
+							line[pos]	= ']';
+							fputs (&line[pos - 1], stdout);
+							if (pos < line_tail) {
+								i = line_tail - pos;
+								while (i--) putchar ('\b');
+							}
+							break;
+						case ']':
+							if (line[pos] == ']') {
+								putchar (']');
+								pos++;
+							} else {
+								if (++line_tail == line_size) {
+									line_size += 256;
+									line = realloc (line, line_size);
+								}
+								for (i=line_tail; i>pos; i--) line[i] = line[i-1];
+								line[pos++] = ']';
+								fputs (&line[pos - 1], stdout);
+								if (pos < line_tail) {
+									i = line_tail - pos;
+									while (i--) putchar ('\b');
+								}
+							}
+							break;
+						case '{':
+							if (pos > 0 && line[pos - 1] == '#') {
+								line_tail++;
+								if (++line_tail >= line_size) {
+									line_size += 256;
+									line = realloc (line, line_size);
+								}
+								for (i=line_tail; i>pos+1; i--) line[i] = line[i-2];
+								line[pos++]	= '{';
+								line[pos]	= '}';
+							} else {
+								if (++line_tail == line_size) {
+									line_size += 256;
+									line = realloc (line, line_size);
+								}
+								for (i=line_tail; i>pos; i--) line[i] = line[i-1];
+								line[pos++] = ch;
+							}
+							fputs (&line[pos - 1], stdout);
+							if (pos < line_tail) {
+								i = line_tail - pos;
+								while (i--) putchar ('\b');
+							}
+							break;
+						case '}':
+							if (line[pos] == '}') {
+								putchar ('}');
+								pos++;
+							} else {
+								if (++line_tail == line_size) {
+									line_size += 256;
+									line = realloc (line, line_size);
+								}
+								for (i=line_tail; i>pos; i--) line[i] = line[i-1];
+								line[pos++] = '}';
+								fputs (&line[pos - 1], stdout);
+								if (pos < line_tail) {
+									i = line_tail - pos;
+									while (i--) putchar ('\b');
+								}
+							}
+							break;
+						default:
 							if (++line_tail == line_size) {
 								line_size += 256;
 								line = realloc (line, line_size);
 							}
 							for (i=line_tail; i>pos; i--) line[i] = line[i-1];
 							line[pos++] = ch;
-						}
-						fputs (&line[pos - 1], stdout);
-						if (pos < line_tail) {
-							i = line_tail - pos;
-							while (i--) putchar ('\b');
-						}
-						break;
-					case '}':
-						if (line[pos] == '}') {
-							putchar ('}');
-							pos++;
-						} else {
-							if (++line_tail == line_size) {
-								line_size += 256;
-								line = realloc (line, line_size);
-							}
-							for (i=line_tail; i>pos; i--) line[i] = line[i-1];
-							line[pos++] = '}';
 							fputs (&line[pos - 1], stdout);
 							if (pos < line_tail) {
 								i = line_tail - pos;
 								while (i--) putchar ('\b');
 							}
-						}
-						break;
-					default:
-						if (++line_tail == line_size) {
-							line_size += 256;
-							line = realloc (line, line_size);
-						}
-						for (i=line_tail; i>pos; i--) line[i] = line[i-1];
-						line[pos++] = ch;
-						fputs (&line[pos - 1], stdout);
-						if (pos < line_tail) {
-							i = line_tail - pos;
-							while (i--) putchar ('\b');
-						}
-						break;
+							break;
+					}
+				} else {
+					if (++line_tail == line_size) {
+						line_size += 256;
+						line = realloc (line, line_size);
+					}
+					for (i=line_tail; i>pos; i--) line[i] = line[i-1];
+					line[pos++] = ch;
+					fputs (&line[pos - 1], stdout);
+					if (pos < line_tail) {
+						i = line_tail - pos;
+						while (i--) putchar ('\b');
+					}
 				}
 				fflush (stdout);
 				break;
