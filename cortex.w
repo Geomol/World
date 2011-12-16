@@ -452,7 +452,7 @@ probe: make function! [[
 dump-obj: make function! [[
 	{Returns a block of information about an object or port.}
 	obj [context! port!]
-	/local clip-str str form-val val form-pad out type
+	/local words-of clip-str str form-val val form-pad out type
 ][
 	words-of: make function! [[
 		value
