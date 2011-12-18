@@ -6,9 +6,16 @@
 
 #include <windows.h>
 
+#include "../file.h"
+
 
 void *open_library (const char *file) {
-	return LoadLibrary (file);
+	char *winfile = realloc (NULL, strlen (file) + 1);
+	strcpy (winfile, file);
+	winfile = to_local_file (winfile);
+	void *lib = LoadLibrary (winfile);
+	free (winfile);
+	return lib;
 }
 
 

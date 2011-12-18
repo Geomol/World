@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		15-Dec-2011
-	Version:	0.5.15
+	Date:		17-Dec-2011
+	Version:	0.5.16
 	History: [
+		0.5.16	[17-12-2011	JN	{Changed print of typeset! argument types in help}]
 		0.5.15	[15-12-2011	JN	{Added routine
 								 Added ??
 								 Fixed bug in foreach}]
@@ -638,7 +639,7 @@ More information: http://world-lang.org
 						prin [item "["]
 						item: pick next 'args 1
 						either block! = type? :item [
-							prin item
+							prin form item
 							prin "]"
 							item: pick next 'args 1
 						][
@@ -652,7 +653,7 @@ More information: http://world-lang.org
 								item2: pick next 'args 1
 							]
 							prin "["
-							prin item
+							prin form item
 							prin "]"
 							item: :item2
 						][
@@ -725,7 +726,7 @@ More information: http://world-lang.org
 							prin [item "["]
 							item: pick next 'args 1
 							either block! = type? :item [
-								prin item
+								prin form item
 								prin "]"
 								item: pick next 'args 1
 							][
@@ -739,7 +740,7 @@ More information: http://world-lang.org
 									item2: pick next 'args 1
 								]
 								prin "["
-								prin item
+								prin form item
 								prin "]"
 								item: :item2
 							][
