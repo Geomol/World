@@ -1,8 +1,11 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		9-Dec-2011
-	Version:	0.0.16
+	Date:		19-Dec-2011
+	Version:	0.0.17
 	History: [
+		0.0.17	[19-12-2011	JN	{Added reform
+								 Added detab
+								 Added entab}]
 		0.0.16	[09-12-2011	JN	{Added as-binary
 								 Added as-string}]
 		0.0.15	[07-12-2011	JN	{Added with}]
@@ -242,7 +245,7 @@ to-hex: make function! [[
 	"Converts an integer to a hex issue!."
 	value [integer!] "Value to be converted"
 	/size "Specify number of hex digits in result"
-	length [integer!]
+		length [integer!]
 ][
 	to issue! either size [
 		copy/part skip mold to binary! value 18 - length length
@@ -341,5 +344,62 @@ new-line:	:set-newline
 
 ; Sets
 charset:	:bitset
+
+; Strings
+detab: make function! [[
+	"Converts tabs in a string to spaces. (tab size 4)"
+	string [any-string!]
+	/size "Specify number of spaces per tab"
+		number [integer!]
+	/local out mark
+][
+	if none! = type? size [number: 4]
+	out: clear ""
+	mark: find string "^-"
+	while [none! <> type? mark] [
+		insert skip out length? out copy/part string mark
+		insert/dup skip out length? out " " number
+		string: next mark
+		mark: find string "^-"
+	]
+	if none! <> type? string [
+		insert skip out length? out string
+	]
+	out
+]]
+entab: make function! [[
+	"Converts spaces in a string to tabs. (tab size 4)"
+	string [any-string!]
+	/size "Specify number of spaces per tab"
+		number [integer!]
+	/local sp ;mark n
+][
+	comment {
+	mark: find string complement make bitset! " "
+	either none! = type? mark [
+		while [string/1 = #" "] [remove string]
+	][
+		n: to integer! (index? mark) - (index? string) / number
+		remove/part string mark
+		insert/dup string "^-" n
+	]
+	string
+	}
+	if none! = type? size [number: 4]
+	sp: insert/dup clear "" " " number
+	while [sp = copy/part string number] [
+		remove/part string number
+		insert string "^-"
+		string: next string
+	]
+	while [string/1 = #" "] [remove string]
+	skip string (- (index? string) - 1)
+]]
+reform: make function! [[
+    "Forms a reduced block."
+    value "Value to reduce and form"
+][
+    form reduce :value
+]]
 
 print "Done"	; To avoid return value

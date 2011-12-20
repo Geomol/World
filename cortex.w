@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		17-Dec-2011
-	Version:	0.5.16
+	Date:		19-Dec-2011
+	Version:	0.5.17
 	History: [
+		0.5.17	[19-12-2011	JN	{Added "No information" to help}]
 		0.5.16	[17-12-2011	JN	{Changed print of typeset! argument types in help}]
 		0.5.15	[15-12-2011	JN	{Added routine
 								 Added ??
@@ -539,6 +540,10 @@ More information: http://world-lang.org
 }
 		exit
 	]
+    if all [word? :word false = value? :word] [
+        print ["No information on" mold :word]
+        exit
+	] 
 	if all [word! <> type? :word path! <> type? :word] [
 		prin [mold :word "is "]
 		print either find "aeiou" first mold type? :word [
@@ -628,7 +633,7 @@ More information: http://world-lang.org
 	][
 		att: none
 	]
-	either function! = type? :value [
+	either find [function! operator!] type?/word :value [
 		if find [word! lit-word!] type?/word :item [
 			print "^/Arguments:"
 			while [item and (refinement! <> type? :item)] [
@@ -816,6 +821,20 @@ xor': make function! [[
 ]]
 
 ; Math
+<<: make operator! [[
+	"Bitwise shift left."
+	data [integer!]
+	bits [integer!] "Number of bits to shift"
+][
+	shift data bits
+]]
+>>: make operator! [[
+	"Bitwise shift right."
+	data [integer!]
+	bits [integer!] "Number of bits to shift"
+][
+	shift data (- bits)
+]]
 arccos: make function! [[
 	"Inverse trigonometric cosine in radians."
 	value [number!]
