@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
 	Date:		22-Dec-2011
-	Version:	0.5.18
+	Version:	0.5.19
 	History: [
+		0.5.19	[22-12-2011	JN	{Added check on system/options/quiet}]
 		0.5.18	[22-12-2011	JN	{Removed ?? (binding rules)}]
 		0.5.17	[19-12-2011	JN	{Added "No information" to help}]
 		0.5.16	[17-12-2011	JN	{Changed print of typeset! argument types in help}]
@@ -84,7 +85,9 @@ World [
 	]
 ]
 
-prin "Loading Cortex... "
+if system/options/quiet = false [
+	prin "Loading Cortex... "
+]
 
 license: make function! [[
 	"Prints the World/Cortex license agreement."
@@ -2469,5 +2472,7 @@ dt: time: make function! [[
 ]]
 ;do %user.w
 
-print "Done"
+if system/options/quiet = false [
+	print "Done"
+]
 
