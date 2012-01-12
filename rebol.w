@@ -1,8 +1,9 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		19-Dec-2011
-	Version:	0.0.17
+	Date:		12-Jan-2012
+	Version:	0.0.18
 	History: [
+		0.0.18	[12-1-2012	JN	{Added rebol}]
 		0.0.17	[19-12-2011	JN	{Added reform
 								 Added detab
 								 Added entab}]
@@ -32,6 +33,14 @@ World [
 ]
 
 prin "Loading REBOL Extension... "
+
+rebol: make function! [[
+	block [block!]
+][
+	if block! <> type? block [
+		make error! [syntax header]
+	]
+]]
 
 zero:		0
 escape:		#"^["
