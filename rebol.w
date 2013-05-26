@@ -1,8 +1,10 @@
 World [
 	Title:		"REBOL Extension"
 	Date:		26-May-2013
-	Version:	0.0.23
+	Version:	0.0.24
 	History: [
+		0.0.24	[26-5-2013	JN	{Changed many function defs to use func and pick
+								 Freed tan}]
 		0.0.23	[26-5-2013	JN	{Added last}]
 		0.0.22	[24-5-2013	JN	{Moved detab to cortex.w
 								 Added use}]
@@ -25,7 +27,7 @@ World [
 								 Added function}]
 		0.0.13	[01-12-2011	JN	{Added to-hex}]
 		0.0.12	[27-11-2011	JN	{Added forever}]
-		0.0.11	[16-11-2011	JN	{Added many to- function}]
+		0.0.11	[16-11-2011	JN	{Added many to- functions}]
 		0.0.10	[3-11-2011	JN	{Changed native?}]
 		0.0.9	[2-11-2011	JN	{Added charset}]
 		0.0.8	[30-10-2011	JN	{Added /radians to cosine, sine and tangent}]
@@ -98,6 +100,7 @@ sienna:			160.82.45
 silver:			192.192.192
 sky:			164.200.255
 snow:			240.240.240
+free :tan
 tan:			222.184.135
 teal:			0.128.128
 violet:			72.0.90
@@ -222,8 +225,8 @@ as-string: make function! [[
 ][
 	as string! string
 ]]
-decimal?:	:real?
-op?:		:operator?
+decimal?:	func pick :real? 1 pick :real? 2
+op?:		func pick :operator? 1 pick :operator? 2
 native?: make function! [[
 	"True for native function and operator values."
 	value
@@ -308,8 +311,8 @@ xor~: make function! [[
 ]]
 
 ; Math
-!:			:not
-absolute:	:abs
+!:			func pick :not 1 pick :not 2
+absolute:	func pick :abs 1 pick :abs 2
 cosine:		make function! [[value /radians][
 	if and~ radians find [integer! real!] type?/word value [
 		value: value * 57.29577951308232
@@ -320,9 +323,9 @@ cosine:		make function! [[value /radians][
 	/ 2 1]]
 log-10:		make function! [[value][(ln value) / ln 10.]]
 log-2:		make function! [[value][(ln value) / ln 2.]]
-log-e:		:ln
-maximum: :max
-minimum: :min
+log-e:		func pick :ln 1 pick :ln 2
+maximum:	func pick :max 1 pick :max 2
+minimum:	func pick :min 1 pick :min 2
 sine:		make function! [[value /radians][
 	if and~ radians find [integer! real!] type?/word value [
 		value: value * 57.29577951308232
@@ -331,7 +334,7 @@ sine:		make function! [[value /radians][
 	(2.718281828459045 ** (value * 0.0174532925199433 * 1i))
 	- (2.718281828459045 ** (value * 0.0174532925199433 * -1i))
 	/ 2i 1]]
-square-root:	:sqrt
+square-root:	func pick :sqrt 1 pick :sqrt 2
 tangent:		make function! [[value][
 	if and~ radians find [integer! real!] type?/word value [
 		value: value * 57.29577951308232
@@ -384,7 +387,8 @@ append: make function! [[
 	] (- -1 + index? series)
 ]]
 }
-empty?: :tail?
+free :empty?
+empty?:	func pick :tail? 1 pick :tail? 2
 world_insert: :insert
 insert: make function! [[
 	"Inserts a value into a series and returns the series after the insert."
@@ -433,11 +437,11 @@ last: make function! [[
 ][
 	pick tail value -1
 ]]
-new-line?:	:newline?
-new-line:	:set-newline
+new-line?:	func pick :newline? 1 pick :newline? 2
+new-line:	func pick :set-newline 1 pick :set-newline 2
 
 ; Sets
-charset:	:bitset
+charset:	func pick :bitset 1 pick :bitset 2
 
 ; Strings
 entab: make function! [[
