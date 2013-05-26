@@ -3,10 +3,11 @@ This is an alpha release. For testing only. Use at your own risk. Do not distrib
 To run a test
 -------------
 Pick one of the world_* files and rename it to 'world' - then make it executable. (Rename 'world_win32.exe' to 'world.exe' under Windows).
-Also download "cortex.w" and the test/ directory.
+Also download "cortex.w", "user.w" and the mezz/ and test/ directories.
 Start world from a terminal.
 At the world prompt do this:
 
+w> .		; run the Hello, World! program
 w> test		; should return true
 w> m		; will run a Mandelbrot example
 
@@ -24,10 +25,6 @@ w> help
 Known issues
 ------------
 
-- The memory handling system can't cope with cyclic references yet. This happens also with functions, blocks, etc. within contexts, because of binding rules.
+- The memory handling system can't cope with cyclic references yet.
 
 - Operators don't support literals as their first argument, as functions do.
-
-- date! and time! is only partly implemented.
-
-- Even if the OS X version is 64-bit, much of the internals don't utilize this yet.

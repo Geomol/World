@@ -3,11 +3,13 @@
  * File operations
  */
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "../file.h"
@@ -22,6 +24,63 @@ int f_gets (char *output, int max, FILE *input) {
 */
 
 
+char path_buf[MAX_PATH];
+
+
+int get_file_info (WorldFile *wfile) {
+	struct stat stbuf;
+	char *winfile = realloc (NULL, strlen (wfile->path) + 1);
+	strcpy (winfile, wfile->path);
+	winfile = to_local_file (winfile);
+	if (stat (winfile, &stbuf) == -1) {
+		free (winfile);
+		return -1;
+	}
+	free (winfile);
+	if (S_ISDIR (stbuf.st_mode)) {
+		wfile->type = FILE_TYPE_DIR;
+		wfile->size = 0;	// in order to be consistent on all systems
+	} else {
+		wfile->type = FILE_TYPE_FILE;
+		wfile->size = stbuf.st_size;
+	}
+	wfile->time = stbuf.st_mtime;
+	return 0;
+}
+
+
+int open_dir (WorldFile *wfile) {
+	char *winfile = realloc (NULL, strlen (wfile->path) + 1);
+	strcpy (winfile, wfile->path);
+	winfile = to_local_file (winfile);
+	if ((wfile->handle = opendir (winfile)) == NULL) {
+		free (winfile);
+		return -1;
+	}
+	free (winfile);
+	return 0;
+}
+
+
+int read_dir (WorldFile *wfile) {
+	struct dirent *dp;
+	char *cp;
+	do {
+		if ((dp = readdir (wfile->handle)) == NULL) {
+			closedir (wfile->handle);
+			wfile->handle = NULL;
+			return 0;
+		}
+		cp = dp->d_name;
+	} while (cp[0] == '.' && (cp[1] == 0 || cp[1] == '.'));
+	strncpy (path_buf, cp, MAX_PATH - 2);
+	//if (dp->d_type == DT_DIR)
+		//strcat (path_buf, "/");
+	wfile->path = path_buf;
+	return 0;
+}
+
+
 int open_file (char *file) {
 	return open (file, O_RDONLY, 0);
 }
@@ -32,7 +91,7 @@ int close_file (int fd) {
 }
 
 
-int file_length (char *file, int binary) {
+int64_t file_length (char *file, int binary) {
 	char *winfile = realloc (NULL, strlen (file) + 1);
 	strcpy (winfile, file);
 	winfile = to_local_file (winfile);
@@ -40,7 +99,7 @@ int file_length (char *file, int binary) {
 	free (winfile);
 	if (fp == NULL) return -1;
 	fseek (fp, 0L, SEEK_END);
-	int length = ftell (fp);
+	int64_t length = ftell (fp);
 	fclose (fp);
 	return length;
 }
@@ -84,6 +143,7 @@ char *to_local_file (char *file) {
 	char *f;
 	for (f = file; *f; f++)
 		if (*f == '/') *f = '\\';
+	if (*--f == '\\') *f = '\0';
 	return file;
 }
 

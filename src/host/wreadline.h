@@ -10,12 +10,11 @@
 #define KEY_CTRL_D	4
 
 
-int init_keyboard_input ();
-void free_keyboard_input ();
 void init_history ();
 void free_history ();
 //char *w_readline (char *prompt);
-char *w_readline (int *auto_brackets);
+//char *w_readline (int *auto_brackets);
+char *w_readline (int *auto_brackets, int (*tab_completion) (int code, char *line, int attempt, char **result));
 
 
 #endif

@@ -3,13 +3,22 @@
  * File operations
  */
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "file.h"
+
+/*
+#ifdef WORLD_OF_MACOSX
+	#include <mach-o/dyld.h>
+	typedef int (*NSGetExecutablePathProcPtr) (char *buf, size_t *bufsize);
+#endif
+*/
 
 
 /*
@@ -19,6 +28,51 @@ int f_gets (char *output, int max, FILE *input) {
 	return 0;
 }
 */
+
+
+char path_buf[MAX_PATH];
+
+
+int get_file_info (WorldFile *wfile) {
+	struct stat stbuf;
+	if (stat (wfile->path, &stbuf) == -1)
+		return -1;
+	if (S_ISDIR (stbuf.st_mode)) {
+		wfile->type = FILE_TYPE_DIR;
+		wfile->size = 0;	// in order to be consistent on all systems
+	} else {
+		wfile->type = FILE_TYPE_FILE;
+		wfile->size = stbuf.st_size;
+	}
+	wfile->time = stbuf.st_mtime;
+	return 0;
+}
+
+
+int open_dir (WorldFile *wfile) {
+	if ((wfile->handle = opendir (wfile->path)) == NULL)
+		return -1;
+	return 0;
+}
+
+
+int read_dir (WorldFile *wfile) {
+	struct dirent *dp;
+	char *cp;
+	do {
+		if ((dp = readdir (wfile->handle)) == NULL) {
+			closedir (wfile->handle);
+			wfile->handle = NULL;
+			return 0;
+		}
+		cp = dp->d_name;
+	} while (cp[0] == '.' && (cp[1] == 0 || cp[1] == '.'));
+	strncpy (path_buf, cp, MAX_PATH - 2);
+	if (dp->d_type == DT_DIR)
+		strcat (path_buf, "/");
+	wfile->path = path_buf;
+	return 0;
+}
 
 
 int open_file (char *file) {
@@ -31,11 +85,11 @@ int close_file (int fd) {
 }
 
 
-int file_length (char *file, int binary) {
+int64_t file_length (char *file, int binary) {
 	FILE *fp = binary ? fopen (file, "rb") : fopen (file, "r");
 	if (fp == NULL) return -1;
 	fseek (fp, 0L, SEEK_END);
-	int length = ftell (fp);
+	int64_t length = ftello (fp);
 	fclose (fp);
 	return length;
 }
@@ -98,6 +152,26 @@ char *get_pwd () {
 	//return getcwd (NULL, 0);
 	return getcwd (dir, 255);
 }
+
+
+/*
+#ifdef WORLD_OF_MACOSX
+char path[1024];
+char *get_exec_path () {
+	size_t pathLength = 1023;
+	static NSGetExecutablePathProcPtr NSGetExecutablePath = NULL;
+	if (NSGetExecutablePath == NULL) {
+		NSGetExecutablePath = (NSGetExecutablePathProcPtr)
+			NSAddressOfSymbol(NSLookupAndBindSymbol("__NSGetExecutablePath"));
+	}
+	if (NSGetExecutablePath != NULL) {
+		(*NSGetExecutablePath) (path, &pathLength);
+		path[1023] = 0;
+	}
+	return path;
+}
+#endif
+*/
 
 
 /*

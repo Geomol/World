@@ -40,10 +40,13 @@ void free_history () {
 #define KEY_BS		127
 
 
-char *w_readline (int *auto_brackets) {
-	int ch, i, pos = 0, line_tail = 0;
+char *w_readline (int *auto_brackets, int (*tab_completion) (int code, char *line, int attempt, char **result)) {
+	int ch, i, j, pos = 0, line_tail = 0;
 	unsigned int line_size = 256;
 	char *line = realloc (NULL, line_size);
+	char *result;
+	int l;
+	int attempt = 1;
 	if (line == NULL) return NULL;
 	line[0] = '\0';
 	fflush (stdout);
@@ -61,8 +64,24 @@ char *w_readline (int *auto_brackets) {
 				break;
 			case KEY_TAB:
 				/* TODO tab completion */
+				//fputs (line, stdout);
+				l = (*tab_completion) (0, line, attempt++, &result);
+				if (attempt == 3) attempt = 1;
+				for (j=0; j < l; j++) {
+					if (++line_tail == line_size) {
+						line_size += 256;
+						line = realloc (line, line_size);
+					}
+					for (i=line_tail; i>pos; i--) line[i] = line[i-1];
+					line[pos] = result[j];
+					fputs (&line[pos++], stdout);
+					if (pos < line_tail) printf ("\x1b[%dD", line_tail - pos);
+				}
+				line[line_tail] = '\0';
+				//fflush (stdout);
 				break;
 			case KEY_ESC:
+				attempt = 1;
 				ch = getchar ();
 				if (ch == '[') {
 					ch = getchar ();
@@ -175,6 +194,7 @@ char *w_readline (int *auto_brackets) {
 				} else
 					continue;
 			case KEY_BS:
+				attempt = 1;
 				if (pos > 0) {
 					pos--;
 					if ((line[pos] == '\"' && line[pos + 1] == '\"')
@@ -199,6 +219,7 @@ char *w_readline (int *auto_brackets) {
 				}
 				break;
 			default:
+				attempt = 1;
 				if (*auto_brackets) {
 					switch (ch) {
 						case '\"':

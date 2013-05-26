@@ -1,8 +1,15 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		12-Jan-2012
-	Version:	0.0.18
+	Date:		26-May-2013
+	Version:	0.0.23
 	History: [
+		0.0.23	[26-5-2013	JN	{Added last}]
+		0.0.22	[24-5-2013	JN	{Moved detab to cortex.w
+								 Added use}]
+		0.0.21	[21-2-2012	JN	{Added append
+								 Added insert}]
+		0.0.20	[16-2-2012	JN	{Changed detab to use append}]
+		0.0.19	[13-2-2012	JN	{Added empty?}]
 		0.0.18	[12-1-2012	JN	{Added rebol}]
 		0.0.17	[19-12-2011	JN	{Added reform
 								 Added detab
@@ -158,7 +165,21 @@ strict-not-equal?: make function! [[
 ]]
 
 ; Context
-with: make function! [[
+use: make function! [[
+	"Defines words local to a block."
+	[retain]
+	words [block!]
+	body [block!]
+	/local b
+][
+	b: to block! words
+	forall b [
+		poke b 1 to set-word! b/1
+	]
+	append b reduce ['none 'do body]
+	make context! b
+]]
+with: make function! [[		; Not sure where this came from!?
 	"Executes a block at a context"
 	obj [context!]
 	body [block!]
@@ -348,6 +369,70 @@ load: make function! [[
 }
 
 ; Series
+comment {
+world_append: :append
+append: make function! [[
+	"Appends a value to the tail of a series and returns the series head."
+	series [series!]
+	value
+	/only "Appends a series as a series"
+][
+	skip either only [
+		world_append/only series :value
+	][
+		world_append series :value
+	] (- -1 + index? series)
+]]
+}
+empty?: :tail?
+world_insert: :insert
+insert: make function! [[
+	"Inserts a value into a series and returns the series after the insert."
+	series [series!]
+	value
+	/only "Appends a series as a series"
+	/dup "Duplicates the insert a specified number of times"
+		count [integer!]
+	/local n
+][
+	either dup [
+		n: count
+		either only [
+			while [0 <= count: count - 1] [
+				world_insert/only series :value
+			]
+			skip series n
+		][
+			while [0 <= count: count - 1] [
+				world_insert series :value
+			]
+			either find series! type? :value [
+				skip series n * length? :value
+			][
+				skip series n
+			]
+		]
+	][
+		either only [
+			world_insert/only series :value
+			next series
+		][
+			world_insert series :value
+			either find series! type? :value [
+				skip series length? :value
+			][
+				next series
+			]
+		]
+	]
+]]
+last: make function! [[
+	"Last value of a series."
+	[retain]
+	value [series!]
+][
+	pick tail value -1
+]]
 new-line?:	:newline?
 new-line:	:set-newline
 
@@ -355,27 +440,6 @@ new-line:	:set-newline
 charset:	:bitset
 
 ; Strings
-detab: make function! [[
-	"Converts tabs in a string to spaces. (tab size 4)"
-	string [any-string!]
-	/size "Specify number of spaces per tab"
-		number [integer!]
-	/local out mark
-][
-	if none! = type? size [number: 4]
-	out: clear ""
-	mark: find string "^-"
-	while [none! <> type? mark] [
-		insert skip out length? out copy/part string mark
-		insert/dup skip out length? out " " number
-		string: next mark
-		mark: find string "^-"
-	]
-	if none! <> type? string [
-		insert skip out length? out string
-	]
-	out
-]]
 entab: make function! [[
 	"Converts spaces in a string to tabs. (tab size 4)"
 	string [any-string!]
@@ -402,7 +466,8 @@ entab: make function! [[
 		string: next string
 	]
 	while [string/1 = #" "] [remove string]
-	skip string (- (index? string) - 1)
+	;skip string (- -1 + index? string)
+	head string
 ]]
 reform: make function! [[
     "Forms a reduced block."

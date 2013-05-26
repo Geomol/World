@@ -12,4 +12,3 @@
 [true = zero? 0.0]
 
 ; Series
-["1" == append "" 1]

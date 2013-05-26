@@ -1,8 +1,45 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		22-Dec-2011
-	Version:	0.5.19
+	Date:		26-May-2013
+	Version:	0.6.12
 	History: [
+		0.6.12	[26-05-2013	JN	{Added of
+								 Removed /deg from arccos, arcsin and arctan
+								 Added to-deg
+								 Changed include
+								 Remove time (was the same as dt)
+								 Added block rules to bitset
+								 Changed set/at to set/local/at in parsing}]
+		0.6.11	[24-05-2013	JN	{Made head and tail native
+								 Made negate, not and clear native
+								 Changed detab to not use parse
+								 Fixed foreach
+								 Changed forall
+								 Added deg}]
+		0.6.10	[14-05-2013	JN	{Moved last-error to system
+								 Added detab}]
+		0.6.9	[12-05-2013	JN	{Changed source to also take function argument}]
+		0.6.8	[10-05-2013	JN	{Added input}]
+		0.6.7	[09-05-2013	JN	{Added retain to many functions
+								 Added /free and /retain to change}]
+		0.6.6	[04-05-2013	JN	{Added columnize to sys-utils
+								 Added tab-completion to sys-utils}]
+		0.6.5	[01-05-2013	JN	{Added forall}]
+		0.6.4	[29-04-2013	JN	{Changed input' to local in parse}]
+		0.6.3	[27-04-2013	JN	{Added free-all}]
+		0.6.2	[26-04-2013	JN	{Changed random to return percent!
+								 Fixed bug in form}]
+		0.6.1	[22-04-2013	JN	{Changed head and tail to support word! *** Doesn't work with contexts! ***
+								 Changed help, becuase of new memory management}]
+		0.6.0	[09-04-2013	JN	{Changed q, because of new memory management}]
+		0.5.24	[21-02-2012	JN	{Added copy-series to sys-utils
+								 Improved head
+								 Removed /local from head and tail}]
+		0.5.23	[20-02-2012	JN	{Added mold-series to sys-utils}]
+		0.5.22	[19-02-2012	JN	{Rewrote switch because of datatype! <-> word! coercion}]
+		0.5.21	[17-02-2012	JN	{Added none! check to empty?
+								 Added more?}]
+		0.5.20	[16-02-2012	JN	{Removed append, as it's now native }]
 		0.5.19	[22-12-2011	JN	{Added check on system/options/quiet}]
 		0.5.18	[22-12-2011	JN	{Removed ?? (binding rules)}]
 		0.5.17	[19-12-2011	JN	{Added "No information" to help}]
@@ -85,12 +122,13 @@ World [
 	]
 ]
 
+;comment {	; exclude all
 if system/options/quiet = false [
 	prin "Loading Cortex... "
 ]
 
 license: make function! [[
-	"Prints the World/Cortex license agreement."
+	"Print the World/Cortex license agreement."
 ][
 	print system/license
 ]]
@@ -104,11 +142,11 @@ any-object!:	make typeset! [context! error! port!]
 any-paren!:		make typeset! [paren!]
 any-path!:		make typeset! [path! set-path! get-path! lit-path!]
 any-string!:	make typeset! [string! binary! file! url! tag! issue!]
-any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! range! time! date! string! binary! file! url! tag! issue! block! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! context! library! error! port! KWATZ!]
+any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! range! time! date! string! binary! file! url! tag! issue! block! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! context! error! port! handle! struct! library! KWATZ!]
 any-word!:		make typeset! [word! set-word! get-word! lit-word! refinement!]
 number!:		make typeset! [integer! real! complex! percent!]
 scalar!:		make typeset! [integer! real! complex! percent! char! range! tuple! time!]
-series!:		make typeset! [string! binary! file! url! tag! issue! block! paren! path! set-path! get-path! lit-path!]
+series!:		make typeset! [string! binary! file! url! tag! issue! block! paren! path! set-path! get-path! lit-path! KWATZ!]
 
 comment {
 system/schemes: make system/schemes [
@@ -198,7 +236,7 @@ lesser-or-equal?: make function! [[
 ; Context
 context: make function! [[
 	"Define a unique, underived context."
-	[throw]
+	[throw retain]	; TODO Thy is throw here?
 	block [block!] "Context variables and values."
 ][
 	make context! block
@@ -206,15 +244,16 @@ context: make function! [[
 
 ; Control
 does: make function! [[
-	"Defines a function that has no arguments."
+	"Define a function that has no arguments."
+	[retain]
 	body [block!] "The body block of the function."
 ][
-	;make function! reduce [[] body]
-	make function! back insert/only remove next [[]] body
+	make function! reduce [[] body]
+	;make function! back insert/only remove next [[]] body
 ]]
 for: make function! [[
-	"Evaluates a block over a range of values."
-	[throw]
+	"Evaluate a block over a range of values."
+	[throw retain]
 	'word [word!] "Variable to hold current value"
 	start [integer! real! percent! char!] "Starting value"
 	end [integer! real! percent! char!] "Ending value"
@@ -222,7 +261,7 @@ for: make function! [[
 	body [block!] "Block to evaluate each time"
 	/local do-body
 ][
-	do-body: make function! reduce [reduce [[throw] word] body]
+	do-body: make function! reduce [reduce [[throw retain] word] body]
 	start: start - bump
 	either bump < 0 [
 		while [end <= start: start + bump] [
@@ -234,66 +273,90 @@ for: make function! [[
 		]
 	]
 ]]
+forall: make function! [[
+	"Evaluate a block for every value in a series."
+	[throw retain]
+	'word [word!] "Word set to each position in series"
+	body [block!] "Block to evaluate each time"
+	/local l result
+][
+	word: get/at word body
+	l: - length? word
+	while [any [0 < length? word (skip' word l false)]] [
+		result: do body
+		next' word
+		result
+	]
+]]
 foreach: make function! [[
-	"Evaluates a block for each value(s) in a series."
-	[throw]
+	"Evaluate a block for each value(s) in a series."
+	[throw retain]
 	'word [word! block!] "Word or block or words to set each time"
 	data [series!] "Series to traverse"
 	body [block!] "Block to evaluate each time"
-	/local do-body spec
+	/local c l body' data' result
 ][
 	if 0 < length? data [
-		spec: []
-		remove/part spec length? spec	; clear, to avoid copy
-		insert spec [[throw] data /local]
-		append spec :word
+		c: copy [none]
 		either block! = type? word [
-			insert body reduce [word 'data]
-			;insert body 'set/local		; TODO Gives wrong result!
-			insert body [set/local]
-			do-body: make function! reduce [spec body]
-			either (length? word) < length? data [
-				do-body data
-				while [0 < length? data: skip data length? word] [
-					do-body data
-				]
-			][
-				do-body data
+			l: length? word
+			while [l > 0] [
+				insert c to set-word! word/:l
+				l: l - 1
 			]
+			c: make context! bind c body
+			body': bind copy body c
+			l: length? word
+			set/local/at word data c
+			do body'
+			data': copy/shallow data
+			while [0 < length? skip' data' l] [
+				set/local/at word data' c
+				result: do body'
+			]
+			set/local/at word none c
 		][
-			insert body reduce [to set-word! word 'data]
-			do-body: make function! reduce [spec body]
-			either 1 = length? data [
-				do-body data/1
-			][
-				do-body data/1
-				while [0 < length? next 'data] [
-					do-body data/1
-				]
+			insert c to set-word! word
+			c: make context! bind c body
+			body': bind copy body c
+			set/local/at word data/1 c
+			do body'
+			data': copy/shallow data
+			while [0 < length? next' data'] [
+				set/local/at word data'/1 c
+				result: do body'
 			]
+			set/local/at word none c
 		]
 	]
+	result
 ]]
 func: make function! [[
-	"Defines a function with given spec and body."
+	"Define a function with given spec and body."
+	[retain]
 	spec [block!] {"Description" followed by arguments (opt type and string)}
 	body [block!] "The body block of the function"
 ][
 	make function! reduce [spec body]
 ]]
 has: make function! [[
-	"Defines a function that has local variables but no arguments."
+	"Define a function that has local variables but no arguments."
+	[retain]
 	locals [block!]
 	body [block!] "The body block of the function."
 ][
 	;make function! reduce [insert insert clear [] locals /local body]
+	;make function! insert/only
+		;insert/only remove/part [] 2 body
+			;insert insert clear [] locals /local
+	;make function! reduce [insert copy locals /local body]
 	make function! insert/only
-		insert/only remove/part [] 2 body
-			insert insert clear [] locals /local
+			insert/only copy [] body
+			append copy [/local] locals
 ]]
 loop: make function! [[
-	"Evaluates a block a specified number of times."
-	[throw]
+	"Evaluate a block a specified number of times."
+	[throw retain]
 	count [integer!] "Number of repetitions"
 	block [block!] "Block to evaluate each time"
 ][
@@ -305,36 +368,43 @@ loop: make function! [[
 	while [0 <= count: count - 1] block
 ]]
 native: make function! [[
-	"Defines a native function with given spec and native code."
+	"Define a native function with given spec and native code."
+	[retain]
 	spec [block!] {"Description" followed by arguments (opt type and string)}
 	nc [integer!] "Native code specifying the native function"
 ][
 	make function! reduce [spec nc]
 ]]
 native-op: make function! [[
-	"Defines a native operator with given spec and native code."
+	"Define a native operator with given spec and native code."
+	[retain]
 	spec [block!] {"Description" followed by exactly two arguments (opt type and string)}
 	nc [integer!] "Native code specifying the native operator"
 ][
 	make operator! reduce [spec nc]
 ]]
 operator: make function! [[
-	"Defines an operator with given spec and body."
+	"Define an operator with given spec and body."
+	[retain]
 	spec [block!] {"Description" followed by exactly two arguments (opt type and string)}
 	body [block!] "The body block of the operator"
 ][
 	make operator! reduce [spec body]
 ]]
-q: :quit
+;q: :quit
+q: make function! reduce [pick :quit 1 pick :quit 2]
 repeat: make function! [[
-	"Evaluates a block a number of times."
-	[throw]
+	"Evaluate a block a number of times."
+	[throw retain]
 	'word [word!] "Word to set each time"
 	value [integer!] "Maximum number"
 	body [block!] "Block to evaluate each time"
-	/local do-body start
+	/local spec do-body start
 ][
-	do-body: make function! reduce [reduce [[throw] word] body]
+	spec: [[throw retain]]
+	append spec word
+	do-body: make function! reduce [spec body]
+	remove/last spec
 	start: 0
 	while [value > start] [
 		start: start + 1
@@ -343,53 +413,48 @@ repeat: make function! [[
 ]]
 routine: make function! [[
 	"Define a library routine"
+	[retain]
 	spec [block!] {"Description" followed by library, routine name, arguments and return type}
 ][
 	make routine! spec
 ]]
 struct: make function! [[
-	"Defines a structure."
+	"Define a structure."
+	[retain]
 	spec [block!] {"Description" followed by datatypes and arguments (opt string)}
 	values [block! none! word!] "Initial values"
 ][
 	make struct! reduce [spec values]
 ]]
 switch: make function! [[
-	"Selects a choice and evaluates the block that follows it."
-	[throw]
+	"Select a choice and evaluate the block that follows it."
+	[throw retain]
 	value "Value to search for"
 	cases [block!] "Block of cases to search"
 	/default
 		case "Default case if no others are found"
 	/local to-do
 ][
-	either datatype! = type? value [
-		to-do: find cases datatype!
-		if to-do [
-			to-do: find to-do value
-			while [all [none! <> type? to-do value <> to-do/1]] [
-				to-do: find next to-do datatype!
-				if to-do [to-do: find to-do value]
-			]
-		]
+	to-do: find cases either datatype! = type? :value [
+		to word! value
 	][
-		to-do: find cases value
+		:value
 	]
 	if to-do [
 		to-do: find next to-do block!
-		while [all [none! <> type? to-do block! <> type? to-do/1]] [
+		while [all [none! <> type? to-do block! <> type? pick to-do 1]] [
 			to-do: find next to-do block!
 		]
 	]
 	either to-do [
-		do to-do/1
+		do pick to-do 1
 	][
 		if default [do case]
 	]
 ]]
 until: make function! [[
-	"Evaluates a block until it is true."
-	[throw]
+	"Evaluate a block until it is true."
+	[throw retain]
 	block [block!]
 	/local result
 ][
@@ -398,8 +463,7 @@ until: make function! [[
 ]]
 
 ; Datatype
-; TODO Doesn't work:
-;unset?:			make function! [["True for unset values." value][unset! = type? value]]
+unset?:			make function! [["True for unset values." value][unset! = type? value]]
 none?:			make function! [["True for none values." value][none! = type? :value]]
 logic?:			make function! [["True for logic value." value][logic! = type? :value]]
 integer?:		make function! [["True for integer values." value][integer! = type? :value]]
@@ -450,34 +514,36 @@ series?:		make function! [["True for series values." value][find series! type? :
 
 ; Help
 probe: make function! [[
-	"Prints a molded value and returns that same value."
+	"Print a molded value and return that same value."
+	[retain]
 	value
 ][
 	print mold :value :value
 ]]
 dump-obj: make function! [[
-	{Returns a block of information about an object or port.}
-	obj [context! port!]
+	"Return a block of information about an object or port."
+	obj [context! error! port!]
 	/local words-of clip-str str form-val val form-pad out type
 ][
 	words-of: make function! [[
+		[retain]
 		value
 		/local result w
 	][
 		result: to block! value
 		while [0 < length? result] [
-			w: to word! result/1
+			w: as word! result/1
 			insert remove/part result 2 w
-			next 'result
+			next' result
 		]
 		head result
 	]]
-	clip-str: make function! [[str] [
+	clip-str: make function! [[[retain] str] [
 		trim/lines str
 		if (length? str) > 45 [str: append copy/part str 45 "..."]
 		str
 	]]
-	form-val: make function! [[val] [
+	form-val: make function! [[[retain] val] [
 		if any-block? :val [return form reduce ["length:" length? val]]
 		;if image? :val [return form reduce ["size:" val/size]]
 		;if datatype? :val [return get in spec-of val 'title]
@@ -488,15 +554,15 @@ dump-obj: make function! [[
 				return clip-str mold pick :val 1
 			]
 		]
-		if context? :val [val: words-of val]
+		if any-object? :val [val: words-of val]
 		;if typeset? :val [val: to-block val]
-		;if port? :val [val: reduce [val/spec/title val/spec/ref]]
+		if port? :val [val: reduce [val/scheme val/ref]]
 		;if gob? :val [return form reduce ["offset:" val/offset "size:" val/size]]
 		clip-str mold :val
 	]]
-	form-pad: make function! [[val size] [
+	form-pad: make function! [[[retain] val size] [
 		val: form val
-		insert/dup tail val #" " size - length? val
+		append/dup val #" " size - length? val
 		val
 	]]
 	out: copy []
@@ -519,8 +585,8 @@ dump-obj: make function! [[
 	]
 	out
 ]]
-?: help: make function! [[
-	"Prints information about words and values."
+help: make function! [[
+	"Print information about words and values."
 	'word
 	/local value args item arg-no item2 att
 ][
@@ -566,8 +632,7 @@ More information: http://www.world-lang.org
 		][
 			["a" type? :value "of value: "]
 		]
-		print either context! = type? :value [print "" dump-obj value] [mold :value]
-		;print mold :value
+		print either any-object? :value [print "" dump-obj value] [mold :value]
 		exit
 	]
 	args: pick :value 1
@@ -575,12 +640,12 @@ More information: http://www.world-lang.org
 	either operator! = type? :value [
 		item: args/1
 		while [word! <> type? :item] [
-			item: pick next 'args 1
+			item: pick next' args 1
 		]
 		prin [mold :item mold word ""]
-		item: pick next 'args 1
+		item: pick next' args 1
 		while [word! <> type? :item] [
-			item: pick next 'args 1
+			item: pick next' args 1
 		]
 		prin mold :item
 	][
@@ -591,39 +656,39 @@ More information: http://www.world-lang.org
 				if (string! <> type? :item) and (block! <> type? :item) [
 					prin ["" mold :item]
 				]
-				item: pick next 'args 1
+				item: pick next' args 1
 			]
 		][	; routine!
 			while [word! <> type? :item] [
-				item: pick next 'args 1
+				item: pick next' args 1
 			]
-			args: skip args 2
-			item: pick args 1
+			skip' args 2
+			item: args/1
 			if block! = type? :item [
 				arg-no: 1
 				while [0 < length? item] [
-					either word! = type? pick item 1 [
-						prin ["" mold pick item 1]
-						next 'item
+					either word! = type? item/1 [
+						prin ["" mold item/1]
+						next' item
 					][
 						prin " arg"
 						prin arg-no
 					]
 					next 'arg-no
-					item: skip item 2
-					if string! = type? pick item 1 [
-						next 'item
+					skip' item 2
+					if string! = type? item/1 [
+						next' item
 					]
 				]
 			]
 		]
 	]
-	args: skip args (- (index? args) - 1)
+	head' args
 	item: args/1
 	print "^/^/Description:"
 	if string! = type? :item [
 		print ["   " item]
-		item: pick next 'args 1
+		item: pick next' args 1
 	]
 	prin ["   " mold word "is "]
 	print either find "aeiou" first mold type? :value [
@@ -632,34 +697,34 @@ More information: http://www.world-lang.org
 		["a" type? :value]
 	]
 	either block! = type? :item [
-		att: item
-		item: pick next 'args 1
+		att: copy/shallow item
+		item: pick next' args 1
 	][
 		att: none
 	]
-	either find [function! operator!] type?/word :value [
+	either find [operator! function!] type?/word :value [
 		if find [word! lit-word!] type?/word :item [
 			print "^/Arguments:"
 			while [item and (refinement! <> type? :item)] [
 				prin ["   " item "-- "]
-				item: pick next 'args 1
+				item: pick next' args 1
 				either item [
 					either string! = type? :item [
 						prin [item "["]
-						item: pick next 'args 1
+						item: pick next' args 1
 						either block! = type? :item [
 							prin form item
 							prin "]"
-							item: pick next 'args 1
+							item: pick next' args 1
 						][
 							prin "any-type!]"
 						]
 					][
 						either block! = type? :item [
-							item2: pick next 'args 1
+							item2: pick next' args 1
 							if string! = type? :item2 [
 								prin [item2 ""]
-								item2: pick next 'args 1
+								item2: pick next' args 1
 							]
 							prin "["
 							prin form item
@@ -677,37 +742,37 @@ More information: http://www.world-lang.org
 		]
 	][
 		if routine! = type? :value [
-			args: skip args 2
-			item: pick args 1
+			skip' args 2
+			item: args/1
 			if block! = type? :item [
 				if 0 < length? item [
 					print "^/Arguments:"
 					arg-no: 1
 					while [0 < length? item] [
-						either word! = type? pick item 1 [
+						either word! = type? item/1 [
 							prin ["   " item/1 "-- "]
-							next 'item
+							next' item
 						][
 							prin "    arg"
 							prin [arg-no "-- "]
 						]
-						either string! = type? pick item 3 [
-							prin [pick item 3 ""]
-							print mold pick item 1
-							next 'item
+						either string! = type? item/3 [
+							prin [item/3 ""]
+							print mold item/1
+							next' item
 						][
-							print mold pick item 1
+							print mold item/1
 						]
-						next 'arg-no
-						item: skip item 2
+						next' arg-no
+						skip' item 2
 					]
 				]
-				next 'args
+				next' args
 			]
-			item: pick args 1
+			item: args/1
 			if item <> 'void [
-				item: pick next 'args 1
-				print "^/Returns:"
+				item: pick next' args 1
+				print "^/Return:"
 				either :item == none [
 					print "    (unknown)"
 				][
@@ -720,33 +785,33 @@ More information: http://www.world-lang.org
 		print "^/Refinements:"
 		while [item and ((item <> /local) or (string! = type? args/2))] [
 			prin ["   " mold :item]
-			item: pick next 'args 1
+			item: pick next' args 1
 			if string! = type? :item [
 				prin [" --" item]
-				item: pick next 'args 1
+				item: pick next' args 1
 			]
 			print ""
 			if word! = type? :item [
 				while [item and (refinement! <> type? :item)] [
 					prin ["       " item "-- "]
-					item: pick next 'args 1
+					item: pick next' args 1
 					either item [
 						either string! = type? :item [
 							prin [item "["]
-							item: pick next 'args 1
+							item: pick next' args 1
 							either block! = type? :item [
 								prin form item
 								prin "]"
-								item: pick next 'args 1
+								item: pick next' args 1
 							][
 								prin "any-type!]"
 							]
 						][
 							either block! = type? :item [
-								item2: pick next 'args 1
+								item2: pick next' args 1
 								if string! = type? :item2 [
 									prin [item2 ""]
-									item2: pick next 'args 1
+									item2: pick next' args 1
 								]
 								prin "["
 								prin form item
@@ -769,20 +834,22 @@ More information: http://www.world-lang.org
 		item: att/1
 		while [item] [
 			print ["   " mold :item]
-			item: pick next 'att 1
+			item: pick next' att 1
 		]
 	]
+	head' args
 	prin ""
 ]]
+?: make function! reduce [pick :help 1 pick :help 2]
 comment {
 ??: make function! [[
-    {Prints a variable name followed by its molded value. (debugging)} 
+    "Print a variable name followed by its molded value. (debugging)"
     'name
 	/local s
 ][
     print either word! = type? :name [
 		s: form name
-		insert skip s length? s reduce [": " mold name: get :name]	; TODO Why get-word! (?? loop) ?
+		append s reduce [": " mold name: get :name]	; TODO Why get-word! (?? loop) ?
 		s
 	][
 		mold :name
@@ -791,12 +858,16 @@ comment {
 ]]
 }
 source: make function! [[
-	"Prints the source code for a word."
+	"Print the source code for a word."
 	'word [word!]
 ][
-	prin word
-	print either value? word [
-		[":" mold get word]
+	prin :word
+	print either value? :word [
+		either find [operator! function! routine!] type?/word :word [
+			[":" mold :word]
+		][
+			[":" mold get word]
+		]
 	][
 		" undefined"
 	]
@@ -844,49 +915,31 @@ xor': make function! [[
 arccos: make function! [[
 	"Inverse trigonometric cosine in radians."
 	value [number!]
-	/deg "Returns result in degrees."
 ][
 	either complex! = type? value [
 		0.5 * pi + (1i * ln (1i * value + (e ** (0.5 * ln 1 - (value * value)))))
 	][
-		either deg [
-			57.29577951308232 *
-				pick 0.5 * pi + (1i * ln (1i * value + (e ** (0.5 * ln 1 - (value * value))))) 1
-		][
-			pick 0.5 * pi + (1i * ln (1i * value + (e ** (0.5 * ln 1 - (value * value))))) 1
-		]
+		pick 0.5 * pi + (1i * ln (1i * value + (e ** (0.5 * ln 1 - (value * value))))) 1
 	]
 ]]
 arcsin: make function! [[
 	"Inverse trigonometric sine in radians."
 	value [number!]
-	/deg "Returns result in degrees."
 ][
 	either complex! = type? value [
 		-1i * ln (1i * value + (e ** (0.5 * ln 1 - (value * value))))
 	][
-		either deg [
-			57.29577951308232 *
-				pick -1i * ln (1i * value + (e ** (0.5 * ln 1 - (value * value)))) 1
-		][
-			pick -1i * ln (1i * value + (e ** (0.5 * ln 1 - (value * value)))) 1
-		]
+		pick -1i * ln (1i * value + (e ** (0.5 * ln 1 - (value * value)))) 1
 	]
 ]]
 arctan: make function! [[
 	"Inverse trigonometric tangent in radians."
 	value [number!]
-	/deg "Returns result in degrees."
 ][
 	either complex! = type? value [
 		0.5i * ((ln (1 - (1i * value))) - ln 1 + (1i * value))
 	][
-		either deg [
-			57.29577951308232 *
-				pick 0.5i * ((ln (1 - (1i * value))) - ln 1 + (1i * value)) 1
-		][
-			pick 0.5i * ((ln (1 - (1i * value))) - ln 1 + (1i * value)) 1
-		]
+		pick 0.5i * ((ln (1 - (1i * value))) - ln 1 + (1i * value)) 1
 	]
 ]]
 arg: make function! [[
@@ -901,8 +954,14 @@ cosh: make function! [[
 ][
 	2.718281828459045 ** value + (2.718281828459045 ** - value) / 2.0
 ]]
+deg: make function! [[
+	"Convert degrees to radians."
+	value [number!]
+][
+	value * 0.017453292519943296	; pi / 180
+]]
 exp: make function! [[
-	"Raises Euler's number e to the power."
+	"Raise Euler's number e to the power."
 	power [number!]
 ][
 	2.718281828459045 ** power
@@ -918,31 +977,22 @@ max: make function! [[
 	value1
 	value2
 ][
-	pick reduce [value1 value2] value1 > value2
+	;pick reduce [value1 value2] value1 > value2
+	if :value1 > :value2 [return :value1] :value2
 ]]
 min: make function! [[
 	"The lesser of two values."
 	value1
 	value2
 ][
-	pick reduce [value1 value2] value1 < value2
-]]
-negate: make function! [[
-	"Changes the sign of a number."
-	number [number! time!]
-][
-	- number
-]]
-not: make function! [[
-	"Logic complement."
-	value "Only false and none return true"
-][
-	either none = :value or (false = :value) [true][false]
+	;pick reduce [value1 value2] value1 < value2
+	if :value1 < :value2 [return :value1] :value2
 ]]
 ; TODO NB!! random is not final and will most likely become a native function
 rseed: 1
 random: make function! [[
 	"Random value of the same datatype."
+	[retain]
 	value [integer! real! percent! date!] "Maximum value of result"
 	/seed "Restart or randomize"
 	/local Y to-do
@@ -952,11 +1002,11 @@ random: make function! [[
 	][
 		rseed: 16807 * rseed // 2147483647
 		Y: rseed - 1 * 2147483646 + (16807 * rseed // 2147483647) / 4611686009837453313
-		to-do: find reduce [
+		to-do: find [
 			integer! [1 + to integer! Y * value]
-			real! [Y * value]
-			percent! [Y * value]
-		] type? value
+			real! [value * Y]
+			percent! [value * Y]
+		] type?/word value
 		either to-do [
 			do to-do/2
 		][
@@ -965,7 +1015,7 @@ random: make function! [[
 	]
 ]]
 round: make function! [[
-	"Rounds a numeric value. Halves round up (away from zero) by default."
+	"Round a numeric value. Halves round up (away from zero) by default."
 	n [integer! real! percent!] "The value to round"
 	/to "Return the nearest multiple of the scale parameter"
 	scale [number!] "Must be a non-zero value"
@@ -997,39 +1047,62 @@ tanh: make function! [[
 	2.718281828459045 ** value - (2.718281828459045 ** - value) /
 	(2.718281828459045 ** value + (2.718281828459045 ** - value))
 ]]
+to-deg: make function! [[
+	"Convert radians to degrees."
+	value [number!]
+][
+	value * 57.29577951308232	; 180 / pi
+]]
 zero?: make function! [[
 	"True if a number is zero."
 	number [number!]
 ][
-	number = 0	; TODO check type
+	:number = 0	; TODO check type ?
 ]]
 
 ; Port, File and IO
+input: make function! [[
+	"Inputs a string from the console."
+	[retain]
+	/prompt string [string!]
+	/local s line
+][
+	s: copy system/console/prompt
+	clear system/console/prompt
+	if prompt [
+		prin insert system/console/prompt string
+	]
+	line: trim/lines as string! read system/ports/input
+	insert clear system/console/prompt s
+	line
+]]
 save: make function! [[
-	"Saves to a file"
+	"Save to a file"
+	[retain]
 	where [file!] "Where to save it"
 	value "Value to save"
 	/local s
 ][
-	either block! = type? value [
+	either block! = type? :value [
+		value: copy/shallow value
 		s: clear ""
 		while [0 < length? value] [
-			insert skip s length? s value/1
-			insert skip s length? s #" "
-			value: next value
+			append s value/1
+			append s #" "
+			next' value
 		]
 		write where s
 	][
-		write where mold value
+		write where mold :value
 	]
 ]]
 to-world-file: make function! [[
 	path [string! file!]
 	/local p l
 ][
-	p: to file! path
-	if #":" = p/2 [
-		poke p 2 p/1
+	p: as file! path
+	if #":" = pick p 2 [
+		poke p 2 pick p 1
 		poke p 1 #"/"
 	]
 	l: length? p
@@ -1045,49 +1118,42 @@ to-world-file: make function! [[
 ; Series
 first: make function! [[
 	"First value of a series."
-	series [series! complex! function! operator!]
+	series [series! complex! operator! function! routine!]
 ][
-	series/1
+	pick :series 1
 ]]
 second: make function! [[
 	"Second value of a series."
-	series [series! complex! function! operator!]
+	series [series! complex! operator! function!]
 ][
-	series/2
+	pick :series 2
 ]]
 third: make function! [[
 	"Third value of a series."
-	series [series! complex! function! operator!]
+	series [series!]
 ][
-	series/3
+	pick :series 3
 ]]
 after: make operator! [[
 	"The place after a value in a series."
 	series [series!]
 	value
 ][
-	next find series value
+	next find series :value
 ]]
 before: make operator! [[
 	"The place at a value in a series."
 	series [series!]
 	value
 ][
-	find series value
+	find series :value
 ]]
 from: make operator! [[
-	"Finds a value in a series."
+	"Find a value in a series."
 	value
 	series [series!]
 ][
-	find series value
-]]
-head: make function! [[
-	"The series at its head."
-	series [series!]
-	/local s
-][
-	skip series (- (index? series) - 1)
+	find series :value
 ]]
 head?: make function! [[
 	"True if a series is at its head."
@@ -1096,18 +1162,26 @@ head?: make function! [[
 	1 = index? series
 ]]
 join: make function! [[
-	"Concatenates values."
+	"Concatenate values."
+	[retain]
 	value "Base value"
 	rest "Value or block of values"
 ][
 	;value: either series? :value [copy value] [form :value]
 	value: either find series! type? :value [copy value] [form :value]
 	; head insert tail value reduce :rest
-	insert skip value length? value reduce :rest
-	value
+	append value reduce :rest
+	;value
+]]
+of: make operator! [[
+	"Value at the specified position in a component or series."
+	index "Index offset, symbol, or other value to use as index"
+	aggregate [series! complex! time! date! bitset! tuple! any-function! context! port! struct!]
+][
+	pick :aggregate index
 ]]
 reverse: make function! [[
-	"Reverses a series."
+	"Reverse a series."
 	series [series!]
 	/local i j v
 ][
@@ -1121,9 +1195,1701 @@ reverse: make function! [[
 	]
 	series
 ]]
+sort: make function! [[
+	"Sort a series."
+	series [series!]
+][
+	sys-utils/qsort series 1 length? series
+	series
+]]
+empty?: make function! [[
+	"True if a series is empty."
+	[retain]
+	series [series! none!]
+][
+	if none! = type? series [return true]
+	0 = length? head series
+]]
+more?: make function! [[
+	"True if a series isn't at its tail."
+	series [series! none!]
+][
+	if none! = type? series [return false]
+	0 < length? series
+]]
+tail?: make function! [[
+	"True if a series is at its tail."
+	series [series!]
+][
+	0 >= length? series
+]]
+change: make function! [[
+	"Change a value in a series."
+	[retain]
+	series [series!] "Series at point to change"
+	value "New value"
+	/part "Limit the amount to change to a given length or position"
+		range [integer! series!]
+	/only "Change a series as a series"
+	/free "Free the old value"
+	/retain "Retain the new value"
+][
+	either only [
+		either retain [
+			insert/only/retain either part [
+				either free [
+					remove/part/free series range
+				][
+					remove/part series range
+				]
+			][
+				either free [
+					remove/free series
+				][
+					remove series
+				]
+			] :value
+		][
+			insert/only either part [
+				either free [
+					remove/part/free series range
+				][
+					remove/part series range
+				]
+			][
+				either free [
+					remove/free series
+				][
+					remove series
+				]
+			] :value
+		]
+	][
+		either retain [
+			insert/retain either part [
+				either free [
+					remove/part/free series range
+				][
+					remove/part series range
+				]
+			][
+				either free [
+					remove/free series
+				][
+					remove series
+				]
+			] :value
+		][
+			insert either part [
+				either free [
+					remove/part/free series range
+				][
+					remove/part series range
+				]
+			][
+				either free [
+					remove/free series
+				][
+					remove series
+				]
+			] :value
+		]
+	]
+]]
+
+parse-utils: make context! [
+istack: []
+level: 0
+
+bparse: make function! [[
+	"Parse a block according to rules."
+	input [block!] "Input block to parse"
+	rules [block!] "Rules to parse by"
+	/case "Use case-sensitive comparison"
+	/local keyword-rules type-rules ;get-token
+	i j n keyword token var value dest status mark rules'
+][
+	rules':	copy/shallow rules
+	keyword-rules: [
+		any [
+			until [
+				not switch/default type?/word :token type-rules [	; default
+					either (case and (token == input/1))
+							or ((not case) and (token = input/1)) [
+						next' input
+						true
+					][
+						false
+					]
+				]
+			]
+			true
+		]
+		end [tail? input]
+		into [
+			either block! = type? input/1 [
+				either block! = type? :token [
+					insert/only istack input
+					insert istack level
+					level: 0
+					insert/only istack input/1
+					status: bparse input/1 token
+					level: istack/1
+					remove istack
+					if status [
+						input: istack/1
+						next' input
+					]
+					remove istack
+					status
+				][
+					make error! join "PARSE - invalid argument: " :token
+				]
+			][
+				false
+			]
+		]
+		opt [
+			switch/default type?/word :token type-rules [	; default
+				if (case and (token == input/1))
+						or ((not case) and (token = input/1)) [
+					next' input
+				]
+			]
+			true
+		]
+		skip [
+			either tail? input [
+				false
+			][
+				next' input
+				true
+			]
+		]
+		some [
+			if status: switch/default type?/word :token type-rules [	; default
+				either (case and (token == input/1))
+						or ((not case) and (token = input/1)) [
+					next' input
+					true
+				][
+					false
+				]
+			] [
+				until [
+					not switch/default type?/word :token type-rules [	; default
+						either (case and (token == input/1))
+								or ((not case) and (token = input/1)) [
+							next' input
+							true
+						][
+							false
+						]
+					]
+				]
+				status: true
+			]
+			status
+		]
+		thru [
+			either token = 'end [
+				false
+			][
+				either none = dest: find/only input token [
+					false
+				][
+					;input next dest
+					skip' input 1 + (index? dest) - index? input
+					true
+				]
+			]
+		]
+		to [
+			either token = 'end [
+				tail' input
+				true
+			][
+				either none = dest: find/only input token [
+					false
+				][
+					;input: dest
+					skip' input (index? dest) - index? input
+					true
+				]
+			]
+		]
+		| [
+			rules': none
+			true
+		]
+	]
+
+	type-rules: [
+		none! [
+			true
+		]
+		block! [
+			insert/only istack input
+			either bparse copy/shallow input token [
+				input: istack/1
+				remove istack
+				true
+			][
+				false
+			]
+		]
+		paren! [
+			do token
+			true
+		]
+		datatype! [
+			either all [
+				find to typeset! token type? input/1
+				not tail? input
+			] [
+				next' input
+				true
+			][
+				false
+			]
+		]
+	]
+
+	;input: skip input 0
+	;insert/only istack skip input 0
+	;insert/only istack copy/shallow input
+
+	level: level + 1
+	mark: none
+
+	status: true
+	while [all [rules' not tail? rules']] [
+		i: j: keyword: none
+		;get-token
+		token: rules'/1
+		next' rules'
+		if word! = type? :token [
+			if not find [any copy end into opt set skip some thru to |] token [
+				token: get/at token rules
+			]
+		]	; get-token end
+		switch type?/word :token [
+			integer! [
+				i: max 0 token
+				;get-token
+				token: rules'/1
+				next' rules'
+				if word! = type? :token [
+					if not find [any copy end into opt set skip some thru to |] token [
+						token: get/at token rules
+					]
+				]	; get-token end
+				switch type?/word :token [
+					none! [
+						make error! join "PARSE - unexpected end of rule after: " i
+					]
+					integer! [
+						j: token
+						;get-token
+						token: rules'/1
+						next' rules'
+						if word! = type? :token [
+							if not find [any copy end into opt set skip some thru to |] token [
+								token: get/at token rules
+							]
+						]	; get-token end
+						switch type?/word :token [
+							none! [
+								make error! join "PARSE - unexpected end of rule after: " j
+							]
+							word! [
+								either find [end skip |] token [
+									keyword: token
+								][
+									if find [any into opt some thru to] token [
+										keyword: token
+										;get-token
+										token: rules'/1
+										next' rules'
+										if word! = type? :token [
+											if not find [any copy end into opt set skip some thru to |]
+													token [
+												token: get/at token rules
+											]
+										]	; get-token end
+									]
+								]
+							]
+						]
+					]
+					word! [
+						either find [end skip |] token [
+							keyword: token
+						][
+							if find [any into opt some thru to] token [
+								keyword: token
+								;get-token
+								token: rules'/1
+								next' rules'
+								if word! = type? :token [
+									if not find [any copy end into opt set skip some thru to |] token [
+										token: get/at token rules
+									]
+								]	; get-token end
+							]
+						]
+					]
+				]
+			]
+			get-word! [
+				input: get/at token rules
+			]
+			set-word! [
+				set/local/at token input rules
+			]
+			word! [
+				switch token [
+					any into opt some thru to [
+						keyword: token
+						;get-token
+						token: rules'/1
+						next' rules'
+						if word! = type? :token [
+							if not find [any copy end into opt set skip some thru to |] token [
+								token: get/at token rules
+							]
+						]	; get-token end
+					]
+					end skip | [keyword: token]
+					copy [
+						keyword: token
+						var: rules'/1
+						next' rules'
+						if word! <> type? :var [
+							make error! join "PARSE - invalid argument: " :var
+						]
+					]
+					set [
+						keyword: token
+						var: rules'/1
+						next' rules'
+						if word! <> type? :var [
+							make error! join "PARSE - invalid argument: " :var
+						]
+						;get-token
+						token: rules'/1
+						next' rules'
+						if word! = type? :token [
+							if not find [any copy end into opt set skip some thru to |] token [
+								token: get/at token rules
+							]
+						]	; get-token end
+					]
+				]
+			]
+		]
+		either i [
+			either j [
+				status: true
+				n: i
+				while [all [status n > 0]] [
+					either keyword [
+						status: switch keyword keyword-rules
+					][
+						status: switch/default type?/word :token type-rules [	; default
+							either (case and (token == input/1))
+									or ((not case) and (token = input/1)) [
+								next' input
+								true
+							][
+								false
+							]
+						]
+					]
+					n: n - 1
+				]
+				if status [
+					n: j - i
+					while [all [status n > 0]] [
+						either keyword [
+							status: switch keyword keyword-rules
+						][
+							status: switch/default type?/word :token type-rules [	; default
+								either (case and (token == input/1))
+										or ((not case) and (token = input/1)) [
+									next' input
+									true
+								][
+									false
+								]
+							]
+						]
+						n: n - 1
+					]
+					status: true
+				]
+			][
+				status: true
+				while [all [status i > 0]] [
+					either keyword [
+						status: switch keyword keyword-rules
+					][
+						status: switch/default type?/word :token type-rules [	; default
+							either (case and (token == input/1))
+									or ((not case) and (token = input/1)) [
+								next' input
+								true
+							][
+								false
+							]
+						]
+					]
+					i: i - 1
+				]
+			]
+		][
+			either keyword [
+				switch/default keyword [
+					copy [
+						mark: copy/shallow input
+						status: true
+					]
+					set [
+						value: copy/shallow input/1
+						status: switch/default type?/word :token type-rules [	; default
+							either (case and (token == input/1))
+									or ((not case) and (token = input/1)) [
+								next' input
+								true
+							][
+								false
+							]
+						]
+						if status [set/local/at var value rules]
+					]
+				][
+					if any [
+						all [
+							not find [end skip |] keyword
+							word! = type? :token
+							find [any copy into opt set some thru to |] :token
+						]
+						all [
+							not find [end thru to] keyword
+							:token == 'end
+						]
+					] [
+						make error! join "PARSE - invalid argument: " :token
+					]
+					status: switch keyword keyword-rules
+					if mark [
+						;if mark <> input
+						if mark =? input = false [
+							set/local/at var copy/part mark input rules
+						]
+						mark: none
+					]
+				]
+			][
+				either all [
+						datatype! <> type? :token
+						find [get-word! set-word!] type?/word :token
+				] [
+					status: true
+				][
+					status: switch/default type?/word :token type-rules [	; default
+						either (case and (token == input/1))
+								or ((not case) and (token = input/1)) [
+							next' input
+							true
+						][
+							false
+						]
+					]
+				]
+				if mark [
+					;if mark <> input
+					if mark =? input = false [
+						set/local/at var copy/part mark input rules
+					]
+					mark: none
+				]
+			]
+		]
+		if not status [
+			input: copy/shallow istack/1
+			if all [rules' rules': find rules' '|] [
+				if tail? next' rules' [
+					status: true
+				]
+			]
+		]
+	]
+	level: level - 1
+	either level > 0 [
+		either status [
+			dest: istack/1
+			skip' dest (index? input) - index? dest
+		][
+			remove istack
+		]
+		return status
+	][
+		remove istack
+		either status and tail? input [
+			return true
+		][
+			return false
+		]
+	]
+]]
+
+;
+;*** String parsing ***
+;
+split-string: make function! [[
+	string [string!]
+	split-by [bitset!]
+	/local result mark
+][
+	;result: clear []
+	result: copy []
+	while [all [0 < length? string find split-by string/1]] [
+		append result copy ""
+		next' string
+	]
+	while [0 < length? string] [
+		mark: copy/shallow string
+		while [all [0 < length? string none = find split-by string/1]] [next' string]
+		append result copy/part mark string
+		next' string
+		while [all [0 < length? string find split-by string/1]] [
+			append result copy ""
+			next' string
+		]
+	]
+	if find split-by string/-1 [
+		append result copy ""
+	]
+	result
+]]
+
+sparse: make function! [[
+	"Parse a string according to rules."
+	[retain]
+	input [string!] "Input string to parse"
+	rules [block! string! none!] "Rules to parse by"
+	/all "Parse all chars including spaces"
+	/case "Use case-sensitive comparison"
+	/local keyword-rules type-rules ;get-token
+	i j n keyword token var dest status mark
+	sp rules'
+][
+	rules': either none! = type? rules [
+		none
+	][
+		copy/shallow rules
+	]
+	switch type?/word rules' [
+		none! [
+			remove istack
+			split-string input make bitset! either all ["^/"] ["^-^/ ,;"]
+		]
+		string! [
+			remove istack
+			split-string input make bitset! insert either all ["^/"] ["^-^/ ,;"] rules'
+		]
+		block! [
+			sp: make bitset! "^-^/ ,;"
+			keyword-rules: [
+				any [
+					until [
+						not switch/default type?/word :token type-rules [	; default
+							; Skip white space
+							if not all [
+								while [if not tail? input [if find sp input/1 [true]]] [next' input]
+							]
+							either (case and (token == copy/part input length? token))
+									or ((not case) and (token = copy/part input length? token)) [
+								skip' input length? token
+								true
+							][
+								false
+							]
+						]
+					]
+					true
+				]
+				end [
+					; Skip white space
+					if not all [
+						while [if not tail? input [if find sp input/1 [true]]] [next' input]
+					]
+					tail? input
+				]
+				opt [
+					switch/default type?/word :token type-rules [	; default
+						; Skip white space
+						if not all [
+							while [if not tail? input [if find sp input/1 [true]]] [next' input]
+						]
+						if (case and (token == copy/part input length? token))
+								or ((not case) and (token = copy/part input length? token)) [
+							skip' input length? token
+						]
+					]
+					true
+				]
+				skip [
+					either tail? input [
+						false
+					][
+						next' input
+						true
+					]
+				]
+				some [
+					if status: switch/default type?/word :token type-rules [	; default
+						; Skip white space
+						if not all [
+							while [if not tail? input [if find sp input/1 [true]]] [next' input]
+						]
+						either (case and (token == copy/part input length? token))
+								or ((not case) and (token = copy/part input length? token)) [
+							skip' input length? token
+							true
+						][
+							false
+						]
+					] [
+						until [
+							not switch/default type?/word :token type-rules [	; default
+								; Skip white space
+								if not all [
+									while [if not tail? input [if find sp input/1 [true]]] [
+										next' input
+									]
+								]
+								either (case and (token == copy/part input length? token))
+										or ((not case) and (token = copy/part input length? token)) [
+									skip' input length? token
+									true
+								][
+									false
+								]
+							]
+						]
+						status: true
+					]
+					status
+				]
+				thru [
+					either token = 'end [
+						false
+					][
+						either none = dest: find input token [
+							false
+						][
+							;input: skip dest length? token
+							skip' input (index? dest) - (index? input) + length? token
+							true
+						]
+					]
+				]
+				to [
+					either token = 'end [
+						tail' input
+						true
+					][
+						either none = dest: find input token [
+							false
+						][
+							skip' input (index? dest) - index? input
+							true
+						]
+					]
+				]
+				| [
+					rules': none
+					true
+				]
+			]
+
+			type-rules: [
+				none! [
+					true
+				]
+				char! [
+					; Skip white space
+					if not all [
+						while [if not tail? input [if find sp input/1 [true]]] [next' input]
+					]
+					either token = input/1 [
+						next' input
+						true
+					][
+						false
+					]
+				]
+				bitset! [
+					; Skip white space
+					if not all [
+						while [if not tail? input [if find sp input/1 [true]]] [next' input]
+					]
+					either tail? input [
+						false
+					][
+						either find token input/1 [
+							next' input
+							true
+						][
+							false
+						]
+					]
+				]
+				block! [
+					insert istack input
+					either all [
+						either case [
+							either sparse/all/case copy/shallow input token [
+								input: istack/1
+								remove istack
+								true
+							][
+								false
+							]
+						][
+							either sparse/all copy/shallow input token [
+								input: istack/1
+								remove istack
+								true
+							][
+								false
+							]
+						]
+					][
+						either case [
+							either sparse/case copy/shallow input token [
+								input: istack/1
+								remove istack
+								true
+							][
+								false
+							]
+						][
+							either sparse copy/shallow input token [
+								input: istack/1
+								remove istack
+								true
+							][
+								false
+							]
+						]
+					]
+				]
+				paren! [
+					do token
+					true
+				]
+				datatype! [
+					make error! join "PARSE - invalid rule: " token
+				]
+			]
+
+			;input: skip input 0
+			;insert/only istack skip input 0
+			;insert istack input
+			;probe istack
+
+			level: level + 1
+			mark: none
+
+			status: true
+			while [if rules' [if not tail? rules' [true]]] [
+				i: j: keyword: none
+				;get-token
+				token: rules'/1
+				next' rules'
+				if word! = type? :token [
+					if not find [any copy end opt skip some thru to |] token [
+						token: get/at token rules
+					]
+				]	; get-token end
+				switch/default type?/word :token [
+					none! char! bitset! block! paren! datatype! []
+					integer! [
+						i: max 0 token
+						;get-token
+						token: rules'/1
+						next' rules'
+						if word! = type? :token [
+							if not find [any copy end opt skip some thru to |] token [
+								token: get/at token rules
+							]
+						]	; get-token end
+						switch/default type?/word :token [
+							none! [
+								make error! join "PARSE - unexpected end of rule after: " i
+							]
+							char! bitset! block! paren! datatype! []
+							integer! [
+								j: token
+								;get-token
+								token: rules'/1
+								next' rules'
+								if word! = type? :token [
+									if not find [any copy end opt skip some thru to |] token [
+										token: get/at token rules
+									]
+								]	; get-token end
+								switch/default type?/word :token [
+									none! [
+										make error! join "PARSE - unexpected end of rule after: " j
+									]
+									char! bitset! block! paren! datatype! []
+									word! [
+										either find [end skip |] token [
+											keyword: token
+										][
+											if find [any opt some thru to] token [
+												keyword: token
+												;get-token
+												token: rules'/1
+												next' rules'
+												if word! = type? :token [
+													if not find [any copy end opt
+															skip some thru to |] token [
+														token: get/at token rules
+													]
+												]	; get-token end
+												switch/default type?/word :token [
+													none! char! bitset! block! paren! datatype! []
+												] [
+													;mold token
+												]
+											]
+										]
+									]
+								] [	; default
+									token: form :token
+								]
+							]
+							word! [
+								either find [end skip |] token [
+									keyword: token
+								][
+									if find [any opt some thru to] token [
+										keyword: token
+										;get-token
+										token: rules'/1
+										next' rules'
+										if word! = type? :token [
+											if not find [any copy end opt skip some thru to |] token [
+												token: get/at token rules
+											]
+										]	; get-token end
+										switch/default type?/word :token [
+											none! char! bitset! block! paren! datatype! []
+										] [
+											;mold token
+										]
+									]
+								]
+							]
+						] [	; default
+							token: form :token
+						]
+					]
+					word! [
+						switch token [
+							any opt some thru to [
+								keyword: token
+								;get-token
+								token: rules'/1
+								next' rules'
+								if word! = type? :token [
+									if not find [any copy end opt skip some thru to |] token [
+										token: get/at token rules
+									]
+								]	; get-token end
+								switch/default type?/word :token [
+									none! char! bitset! block! paren! datatype! []
+								] [
+									;mold token
+								]
+							]
+							end skip | [keyword: token]
+							copy [
+								keyword: token
+								var: rules'/1
+								next' rules'
+								if word! <> type? :var [
+									make error! join "PARSE - invalid argument: " :var
+								]
+							]
+						]
+					]
+					set-word! [
+						set/local/at token input rules
+					]
+					get-word! [
+						input: get/at token rules
+					]
+				] [	; default
+					token: form :token
+				]
+				either i [
+					either j [
+						status: true
+						n: i
+						while [n > 0 and status] [
+							either keyword [
+								status: switch keyword keyword-rules
+							][
+								status: switch/default type?/word :token type-rules [	; default
+									; Skip white space
+									if not all [
+										while [if not tail? input [if find sp input/1 [true]]] [
+											next' input
+										]
+									]
+									either (case and (token == copy/part input length? token))
+											or ((not case)
+											and (token = copy/part input length? token)) [
+										skip' input length? token
+										true
+									][
+										false
+									]
+								]
+							]
+							n: n - 1
+						]
+						if status [
+							n: j - i
+							while [n > 0 and status] [
+								either keyword [
+									status: switch keyword keyword-rules
+								][
+									status: switch/default type?/word :token type-rules [	; default
+										; Skip white space
+										if not all [
+											while [if not tail? input [if find sp input/1 [true]]] [
+												next' input
+											]
+										]
+										either (case and (token == copy/part input length? token))
+												or ((not case)
+												and (token = copy/part input length? token)) [
+											skip' input length? token
+											true
+										][
+											false
+										]
+									]
+								]
+								n: n - 1
+							]
+							status: true
+						]
+					][
+						status: true
+						while [i > 0 and status] [
+							either keyword [
+								status: switch keyword keyword-rules
+							][
+								status: switch/default type?/word :token type-rules [	; default
+									; Skip white space
+									if not all [
+										while [if not tail? input [if find sp input/1 [true]]] [
+											next' input
+										]
+									]
+									either (case and (token == copy/part input length? token))
+											or ((not case)
+											and (token = copy/part input length? token)) [
+										skip' input length? token
+										true
+									][
+										false
+									]
+								]
+							]
+							i: i - 1
+						]
+					]
+				][
+					either keyword [
+						switch/default keyword [
+							copy [
+								; Skip white space
+								if not all [
+									while [if not tail? input [if find sp input/1 [true]]] [
+										next' input
+									]
+								]
+								mark: copy/shallow input
+								;mark: retain copy/shallow input
+								status: true
+							]
+						][
+							if any [
+								if not find [end skip |] keyword [
+									if word! = type? :token [
+										if find [any copy opt some thru to |] :token [
+											true
+										]
+									]
+								]
+								if not find [end thru to] keyword [
+									if :token == 'end [
+										true
+									]
+								]
+							] [
+								make error! join "PARSE - invalid argument: " :token
+							]
+							status: switch keyword keyword-rules
+							if mark [
+								;if mark <> input
+								;if not same? mark input
+								if mark =? input = false [
+									set/local/at var copy/part mark input rules
+								]
+								;free mark
+								mark: none
+							]
+						]
+					][
+						either (datatype! <> type? :token)
+								and find [get-word! set-word!] type?/word :token [
+							status: true
+						][
+							status: switch/default type?/word :token type-rules [	; default
+								; Skip white space
+								if not all [
+									while [if not tail? input [if find sp input/1 [true]]] [
+										next' input
+									]
+								]
+								either (case and (token == copy/part input length? token))
+										or ((not case) and (token = copy/part input length? token)) [
+									skip' input length? token
+									true
+								][
+									false
+								]
+							]
+						]
+						if mark [
+							;if mark <> input
+							if mark =? input = false [
+								set/local/at var copy/part mark input rules
+							]
+							;free mark
+							mark: none
+						]
+					]
+				]
+				if not status [
+					input: copy/shallow istack/1
+					if rules' [
+						if rules': find rules' '| [
+							if tail? next' rules' [
+								status: true
+							]
+						]
+					]
+				]
+			]
+			; Skip white space
+			if not all [
+				while [if not tail? input [if find sp input/1 [true]]] [next' input]
+			]
+			;remove istack
+			level: level - 1
+			either level > 0 [
+				either status [
+					;insert/only istack copy/shallow input
+					dest: istack/1
+					skip' dest (index? input) - index? dest
+				][
+					remove istack
+				]
+				return status
+			][
+				remove istack
+				either status and tail? input [
+					return true
+				][
+					return false
+				]
+			]
+		]
+	]
+]]
+
+set 'parse make function! [[
+	"Parse a series according to rules."
+	[retain]
+	input [series!] "Input series to parse"
+	rules [block! string! none!] "Rules to parse by"
+	/all "Parse all chars including spaces"
+	/case "Use case-sensitive comparison"
+][
+	clear istack
+	level: 0
+
+	switch/default type?/word input [
+		block! paren! path! [
+			insert/only istack copy/shallow input
+			either case [
+				bparse/case copy/shallow input rules
+			][
+				bparse copy/shallow input rules
+			]
+		]
+		string! binary! file! url! tag! issue! KWATZ! [
+			insert istack to string! input
+			either all [
+				either case [
+					sparse/all/case to string! input rules
+				][
+					sparse/all to string! input rules
+				]
+			][
+				either case [
+					sparse/case to string! input rules
+				][
+					sparse to string! input rules
+				]
+			]
+		]
+	] [
+		make error! "parse expected input argument of type: series!"
+	]
+]]
+]	; context
+
+; Sets
+bitset: make function! [[
+	"Define a bitset of characters."
+	[retain]
+	chars [string! block!]
+	/local result s c1 c2 mark
+][
+	make bitset! either block! = type? chars [
+		result: make string! 32
+		parse chars [
+			any [
+				set s string! (append result s)
+				| set c1 char! '- set c2 char! (
+					if c1 > c2 [make error! "invalid character range"]
+					for c c1 c2 1 [append result c]
+				)
+				| set c1 char! (append result c1)
+			]
+			mark: (
+				if 0 < length? mark [
+					make error! join "invalid argument: " first mark
+				]
+			)
+		]
+		result
+	][
+		chars
+	]
+]]
+
+; Strings
+detab: make function! [[
+	"Converts tabs in a string to spaces. (tab size 4)"
+	[retain]
+	string [any-string!]
+	/size "Specify number of spaces per tab"
+		number [integer!]
+	/local out mark
+][
+	if none! = type? size [number: 4]
+	out: clear ""
+	mark: find string "^-"
+	while [mark] [
+		append out copy/part string mark
+		append/dup out " " number
+		string: next mark
+		mark: find string "^-"
+	]
+	if string [
+		append out string
+	]
+	out
+]]
+form: make function! [[
+	"Convert a value to a string."
+	[retain]
+	value "The value to form"
+	/local result
+][
+	switch/default type?/word :value [
+		string! [
+			;copy/shallow value
+			value
+		]
+		block! paren! [
+			result: make string! 8
+			if 0 < length? value [
+				value: copy/shallow value
+				insert result form value/1
+				next' value
+				while [0 < length? value] [
+					tail' result
+					insert result " "
+					next' result
+					insert result form value/1
+					next' value
+				]
+			]
+			head' result
+		]
+		binary! tag! path! set-path! get-path! lit-path! [
+			mold value
+		]
+		datatype! [
+			result: to string! value
+			if #"!" = pick result length? result [
+				remove/last result
+			]
+			result
+		]
+	] [
+		to string! :value
+	]
+]]
+lowercase: make function! [[
+	"Convert string of characters to lowercase."
+	string [any-string! char!]
+	/local l
+][
+	either char! = type? string [
+		either string >= #"A" and (string <= #"Z") [
+			string + 32
+		][
+			string
+		]
+	][
+		l: - length? string
+		while [0 < length? string] [
+			if (pick string 1) >= #"A" and ((pick string 1) <= #"Z") [
+				poke string 1 32 + pick string 1
+			]
+			next' string
+		]
+		skip' string l
+	]
+]]
+trim: make function! [[
+	"Remove whitespace from a string. Default removes from head and tail."
+	[retain]
+	string [any-string!]
+	/head "Remove only from the head"
+	/tail "Remove only from the tail"
+	/lines "Remove all line breaks and extra spaces"
+	/local ptr stop
+][
+	ptr: copy/shallow string
+	if tail = none or head [
+		while [all [0 < length? ptr find [#" " #"^-" #"^/"] pick ptr 1]] [
+			remove ptr
+		]
+	]
+	if head = none or tail and (0 < length? ptr) [
+		skip' ptr -1 + length? ptr
+		while [all [(index? ptr) >= index? string 0 < length? ptr find [#" " #"^-" #"^/"] pick ptr 1]] [
+			remove ptr
+			back' ptr
+		]
+	]
+	if lines [
+		ptr: copy/shallow string
+		while [all [0 < length? ptr find [#" " #"^-" #"^/"] pick ptr 1]] [
+			next' ptr
+		]
+		stop: skip string -1 + length? string
+		while [all [(index? stop) >= index? ptr find [#" " #"^-" #"^/"] pick stop 1]] [
+			back' stop
+		]
+		while [all [(index? ptr) < index? stop 0 < length? ptr]] [
+			either find [#" " #"^-" #"^/"] pick ptr 1 [
+				poke ptr 1 #" "
+				next' ptr
+				while [all [0 < length? ptr find [#" " #"^-" #"^/"] pick ptr 1]] [
+					remove ptr
+				]
+			][
+				next' ptr
+			]
+		]
+	]
+	string
+]]
+uppercase: make function! [[
+	"Convert string of characters to uppercase."
+	string [any-string! char!]
+	/local l
+][
+	either char! = type? string [
+		either string >= #"a" and (string <= #"z") [
+			string - 32
+		][
+			string
+		]
+	][
+		l: - length? string
+		while [0 < length? string] [
+			if (pick string 1) >= #"a" and ((pick string 1) <= #"z") [
+				poke string 1 -32 + pick string 1
+			]
+			next' string
+		]
+		skip' string l
+	]
+]]
+
+; System
+.: make function! [[][print "Hello, World!"]]
+free-all: make function! [[
+	"Free a list of World resources."
+	[retain]
+	values	[block!] "Block of words"
+][
+	foreach v values [
+		free get/at v values
+	]
+]]
+retain-all: make function! [[
+	"Retain a list of World resources."
+	[retain]
+	values	[block!] "Block of words"
+][
+	foreach v values [
+		retain get/at v values
+	]
+]]
+include: make function! [[
+	file [file!]
+	/local do-file
+][
+	do-file: copy system/options/path
+	append do-file %libs/
+	do append do-file file
+]]
 ;comment [
-context [
+sys-utils: make context! [
+
+columnize: make function! [[
+	[retain]
+	data
+	/local l ld cols col rows ptr
+][
+	l: 0
+	foreach o data [
+		if l < length? o [l: length? o]
+	]
+	l: l + 8 - (l // 8)
+	cols: clear []
+	col: to integer! 80 / l
+	ld: length? data
+	rows: to integer! ld / col
+	if ld // col > 0 [
+		rows: rows + 1
+	]
+	while [col - 1 * rows >= ld] [
+		col: col - 1
+		rows: to integer! ld / col
+		if ld // col > 0 [
+			rows: rows + 1
+		]
+	]
+	repeat i rows [
+		either col - 1 * rows + i > ld [
+			append cols col - 1
+		][
+			append cols col
+		]
+	]
+	ptr: copy/shallow data
+	repeat i rows [
+		loop pick cols i [
+			prin pick data 1
+			loop 1 + to integer! l - (1 + length? pick data 1) / 8 [prin #"^-"]
+			skip' data rows
+		]
+		prin #"^/"
+		next' ptr
+		skip' data (index? ptr) - index? data
+	]
+]]
+
+copied: []
+
+copy-series: make function! [[
+	value [block! paren!]
+	/local new match
+][
+	value: copy/shallow value
+	new: make either block! = type? value [block!] [paren!] 4
+	insert copied reduce [value new]
+	while [0 < length? value] [
+		switch/default type?/word pick value 1 [
+			block! paren! [
+				match: find/only copied pick value 1
+				either any [match = none false = same? pick match 1 pick value 1] [
+					append/only new copy-series pick value 1
+				][
+					;append/only new pick value 1
+					append/only new pick match 2
+				]
+			]
+		][
+			append new pick value 1
+		]
+		next' value
+	]
+	remove/part copied 2
+	new
+]]
+
+molded: []
+output: none
+
+mold-block: make function! [[
+	block [block!]
+	level [integer!]
+	/local match
+][
+	block: copy/shallow block
+	insert/only molded block
+	append output "["
+	either 64 < length? block [
+		if newline? block [
+			append output "^/"
+			loop level + 1 [append output "    "]
+		]
+		loop 64 [
+			switch/default type?/word pick block 1 [
+				block! [
+					match: find/only molded block/1
+					either any [match = none false = same? match/1 block/1] [
+						mold-block block/1 level + 1
+					][
+						append output "[...]"
+					]
+				]
+				paren! [
+					match: find/only molded block/1
+					either any [match = none false = same? match/1 block/1] [
+						mold-paren block/1 level + 1
+					][
+						append output "(...)"
+					]
+				]
+			][
+				append output mold pick block 1
+			]
+			next' block
+			either newline? block [
+				append output "^/"
+				loop level + 1 [append output "    "]
+			][
+				append output " "
+			]
+		]
+		append output "..."
+	][
+		if 0 < length? block [
+			if newline? block [
+				append output "^/"
+				loop level + 1 [append output "    "]
+			]
+			switch/default type?/word pick block 1 [
+				block! [
+					match: find/only molded block/1
+					either any [match = none false = same? match/1 block/1] [
+						mold-block block/1 level + 1
+					][
+						append output "[...]"
+					]
+				]
+				paren! [
+					match: find/only molded block/1
+					either any [match = none false = same? match/1 block/1] [
+						mold-paren block/1 level + 1
+					][
+						append output "(...)"
+					]
+				]
+			][
+				append output mold pick block 1
+			]
+			next' block
+			while [0 < length? block] [
+				either newline? block [
+					append output "^/"
+					loop level + 1 [append output "    "]
+				][
+					append output " "
+				]
+				switch/default type?/word pick block 1 [
+					block! [
+						match: find/only molded block/1
+						either any [match = none false = same? match/1 block/1] [
+							mold-block block/1 level + 1
+						][
+							append output "[...]"
+						]
+					]
+					paren! [
+						match: find/only molded block/1
+						either any [match = none false = same? match/1 block/1] [
+							mold-paren block/1 level + 1
+						][
+							append output "(...)"
+						]
+					]
+				][
+					append output mold pick block 1
+				]
+				next' block
+			]
+		]
+		if newline? block [
+			append output "^/"
+			loop level [append output "    "]
+		]
+		append output "]"
+	]
+	remove molded
+]]
+
+mold-paren: make function! [[
+	paren [paren!]
+	level [integer!]
+	/local match
+][
+	paren: copy/shallow paren
+	insert/only molded paren
+	append output "("
+	either 64 < length? paren [
+		loop 64 [
+			switch/default type?/word pick paren 1 [
+				block! [
+					match: find/only molded paren/1
+					either any [match = none false = same? match/1 paren/1] [
+						mold-block paren/1 level + 1
+					][
+						append output "[...]"
+					]
+				]
+				paren! [
+					match: find/only molded paren/1
+					either any [match = none false = same? match/1 paren/1] [
+						mold-paren paren/1 level + 1
+					][
+						append output "(...)"
+					]
+				]
+			][
+				append output mold pick paren 1
+			]
+			next' paren
+			append output " "
+		]
+		append output "..."
+	][
+		if 0 < length? paren [
+			switch/default type?/word pick paren 1 [
+				block! [
+					match: find/only molded paren/1
+					either any [match = none false = same? match/1 paren/1] [
+						mold-block paren/1 level + 1
+					][
+						append output "[...]"
+					]
+				]
+				paren! [
+					match: find/only molded paren/1
+					either any [match = none false = same? match/1 paren/1] [
+						mold-paren paren/1 level + 1
+					][
+						append output "(...)"
+					]
+				]
+			][
+				append output mold pick paren 1
+			]
+			next' paren
+			while [0 < length? paren] [
+				append output " "
+				switch/default type?/word pick paren 1 [
+					block! [
+						match: find/only molded paren/1
+						either any [match = none false = same? match/1 paren/1] [
+							mold-block paren/1 level + 1
+						][
+							append output "[...]"
+						]
+					]
+					paren! [
+						match: find/only molded paren/1
+						either any [match = none false = same? match/1 paren/1] [
+							mold-paren paren/1 level + 1
+						][
+							append output "(...)"
+						]
+					]
+				][
+					append output mold pick paren 1
+				]
+				next' paren
+			]
+		]
+		append output ")"
+	]
+	remove molded
+]]
+
+mold-series: make function! [[
+	value [block! paren!]
+][
+	clear molded
+	free output
+	output: make string! 2
+	switch type?/word value [
+		block!	[mold-block value 0]
+		paren!	[mold-paren value 0]
+	]
+	output
+]]
+
+print-last-error: make function! [[
+	/local err id
+][
+	err: select system/errors system/last-error/type
+	prin "** "
+	prin err/type
+	prin ": "
+	id: select err system/last-error/id
+	print either block! = type? id [
+		compile/at id system/last-error
+	][
+		id
+	]
+	prin "** Near: "
+	print system/last-error/near
+]]
+
 qsort: make function! [[
+	[retain]
 	v [series!]
 	left [integer!]
 	right [integer!]
@@ -1163,1240 +2929,136 @@ qsort: make function! [[
 	qsort v last + 1 right
 ]]
 
-set 'sort make function! [[
-	"Sorts a series."
-	series [series!]
+strncmp: make function! [[
+	[retain]
+	cs	[any-string!]
+	ct	[any-string!]
+	n	[integer!]
 ][
-	qsort series 1 length? series
-	series
-]]
-]	; sort context
-;]	; comment
-tail: make function! [[
-	"The series at the position after the last value."
-	series [series!]
-	/local s
-][
-	skip series length? series
-]]
-empty?: make function! [[
-	"True if a series is empty."
-	series [series!]
-][
-	0 = length? skip series (- (index? series) - 1)
-]]
-tail?: make function! [[
-	"True if a series is at its tail."
-	series [series!]
-][
-	0 >= length? series
-]]
-append: make function! [[
-	"Appends a value to the tail of a series."
-	series [series!]
-	value
-	/only "Appends a series as a series"
-][
-	if block! = type? series [
-		compile/reset series
+	repeat i n [
+		if (pick cs i) <> pick ct i [
+			return (to integer! pick cs i) - pick ct i
+		]
 	]
-	head either only [
-		insert/only skip series length? series :value
-	][
-		insert skip series length? series :value
-	]
+	return 0
 ]]
-change: make function! [[
-	"Changes a value in a series."
-	series [series!] "Series at point to change"
-	value "New value"
-	/part "Limits the amount to change to a given length or position"
-		range [integer! series!]
-	/only "Changes a series as a series"
+
+strspn: make function! [[
+	[retain]
+	cs	[any-string!]
+	ct	[any-string!]
 ][
-	either only [
-		insert/only either part [
-			remove/part series range
+	repeat i length? cs [
+		if (pick cs i) <> pick ct i [
+			return i - 1
+		]
+	]
+	return length? cs
+]]
+
+tab-completion: make function! [[
+	"Console <tab> completion."
+	[retain]	; TODO really?
+	line	[string!]
+	attempt	[integer!]
+	/local result values selected end-chars l min-l s loaded	; CANNOT change # of locals (see lex.c)
+][
+	values: make block! 4
+	selected: make block! 4
+	end-chars: make bitset! "^@^-^/^M ^"();[]{}"
+	l: length? line
+	while [all [l > 0 none = find end-chars line/:l]] [
+		back 'l
+	]
+	skip' line l
+	loaded: pick load line 1
+	either file! = type? loaded [
+		either s: find/last loaded #"/" [
+			next' s
+			values: read copy/part loaded s
 		][
-			remove series
-		] :value
-	][
-		insert either part [
-			remove/part series range
-		][
-			remove series
-		] :value
-	]
-]]
-clear: make function! [[
-	"Removes all values from the current index to the tail."
-	series [series! none!]
-][
-	remove/part series length? series
-]]
-
-;comment {
-context [
-input': none
-istack: []
-level: 0
-
-bparse: make function! [[
-	"Parses a block according to rules."
-	input [block!] "Input block to parse"
-	rules [block!] "Rules to parse by"
-	/case "Uses case-sensitive comparison"
-	/local keyword-rules type-rules ;get-token
-	i j n keyword token var value dest status mark rules'
-][
-	rules': rules
-	keyword-rules: [
-		any [
-			until [
-				not switch/default type?/word :token type-rules [	; default
-					either (case and (token == input'/1))
-							or ((not case) and (token = input'/1)) [
-						input': next input'
-						true
-					][
-						false
-					]
-				]
-			]
-			true
-		]
-		end [tail? input']
-		into [
-			either block! = type? input'/1 [
-				either block! = type? :token [
-					insert/only istack input'
-					insert istack level
-					level: 0
-					status: bparse input'/1 token
-					level: istack/1
-					remove istack
-					input': next istack/1
-					remove istack
-					status
-				][
-					make error! join "PARSE - invalid argument: " :token
-				]
-			][
-				false
-			]
-		]
-		opt [
-			switch/default type?/word :token type-rules [	; default
-				if (case and (token == input'/1))
-						or ((not case) and (token = input'/1)) [
-					input': next input'
-				]
-			]
-			true
-		]
-		skip [
-			either tail? input' [
-				false
-			][
-				input': next input'
-				true
-			]
-		]
-		some [
-			if status: switch/default type?/word :token type-rules [	; default
-				either (case and (token == input'/1))
-						or ((not case) and (token = input'/1)) [
-					input': next input'
-					true
-				][
-					false
-				]
-			] [
-				until [
-					not switch/default type?/word :token type-rules [	; default
-						either (case and (token == input'/1))
-								or ((not case) and (token = input'/1)) [
-							input': next input'
-							true
-						][
-							false
-						]
-					]
-				]
-				status: true
-			]
-			status
-		]
-		thru [
-			either token = 'end [
-				false
-			][
-				either none = dest: find/only input' token [
-					false
-				][
-					input': next dest
-					true
-				]
-			]
-		]
-		to [
-			either token = 'end [
-				input': tail input'
-				true
-			][
-				either none = dest: find/only input' token [
-					false
-				][
-					input': dest
-					true
-				]
-			]
-		]
-		| [
-			rules: none
-			true
-		]
-	]
-
-	type-rules: [
-		none! [
-			true
-		]
-		block! [
-			bparse input' token
-		]
-		paren! [
-			do token
-			true
-		]
-		datatype! [
-			either all [
-				find to typeset! token type? input'/1
-				not tail? input'
-			] [
-				input': next input'
-				true
-			][
-				false
-			]
-		]
-	]
-
-	insert/only istack input
-	input': input
-
-	level: level + 1
-	mark: none
-
-	status: true
-	while [all [rules not tail? rules]] [
-		i: j: keyword: none
-		;get-token
-		token: rules/1
-		next 'rules
-		if word! = type? :token [
-			if not find [any copy end into opt set skip some thru to |] token [
-				token: get/at token rules'
-			]
-		]	; get-token end
-		switch type?/word :token [
-			integer! [
-				i: max 0 token
-				;get-token
-				token: rules/1
-				next 'rules
-				if word! = type? :token [
-					if not find [any copy end into opt set skip some thru to |] token [
-						token: get/at token rules'
-					]
-				]	; get-token end
-				switch type?/word :token [
-					none! [
-						make error! join "PARSE - unexpected end of rule after: " i
-					]
-					integer! [
-						j: token
-						;get-token
-						token: rules/1
-						next 'rules
-						if word! = type? :token [
-							if not find [any copy end into opt set skip some thru to |] token [
-								token: get/at token rules'
-							]
-						]	; get-token end
-						switch type?/word :token [
-							none! [
-								make error! join "PARSE - unexpected end of rule after: " j
-							]
-							word! [
-								either find [end skip |] token [
-									keyword: token
-								][
-									if find [any into opt some thru to] token [
-										keyword: token
-										;get-token
-										token: rules/1
-										next 'rules
-										if word! = type? :token [
-											if not find [any copy end into opt set skip some thru to |]
-													token [
-												token: get/at token rules'
-											]
-										]	; get-token end
-									]
-								]
-							]
-						]
-					]
-					word! [
-						either find [end skip |] token [
-							keyword: token
-						][
-							if find [any into opt some thru to] token [
-								keyword: token
-								;get-token
-								token: rules/1
-								next 'rules
-								if word! = type? :token [
-									if not find [any copy end into opt set skip some thru to |] token [
-										token: get/at token rules'
-									]
-								]	; get-token end
-							]
-						]
-					]
-				]
-			]
-			get-word! [
-				input': get/at token rules'
-			]
-			set-word! [
-				set/at token input' rules'
-			]
-			word! [
-				switch token [
-					any into opt some thru to [
-						keyword: token
-						;get-token
-						token: rules/1
-						next 'rules
-						if word! = type? :token [
-							if not find [any copy end into opt set skip some thru to |] token [
-								token: get/at token rules'
-							]
-						]	; get-token end
-					]
-					end skip | [keyword: token]
-					copy [
-						keyword: token
-						var: rules/1
-						rules: next rules
-						if word! <> type? :var [
-							make error! join "PARSE - invalid argument: " :var
-						]
-					]
-					set [
-						keyword: token
-						var: rules/1
-						rules: next rules
-						if word! <> type? :var [
-							make error! join "PARSE - invalid argument: " :var
-						]
-						;get-token
-						token: rules/1
-						next 'rules
-						if word! = type? :token [
-							if not find [any copy end into opt set skip some thru to |] token [
-								token: get/at token rules'
-							]
-						]	; get-token end
-					]
-				]
-			]
-		]
-		either i [
-			either j [
-				status: true
-				n: i
-				while [all [status n > 0]] [
-					either keyword [
-						status: switch keyword keyword-rules
-					][
-						status: switch/default type?/word :token type-rules [	; default
-							either (case and (token == input'/1))
-									or ((not case) and (token = input'/1)) [
-								input': next input'
-								true
-							][
-								false
-							]
-						]
-					]
-					n: n - 1
-				]
-				if status [
-					n: j - i
-					while [all [status n > 0]] [
-						either keyword [
-							status: switch keyword keyword-rules
-						][
-							status: switch/default type?/word :token type-rules [	; default
-								either (case and (token == input'/1))
-										or ((not case) and (token = input'/1)) [
-									input': next input'
-									true
-								][
-									false
-								]
-							]
-						]
-						n: n - 1
-					]
-					status: true
-				]
-			][
-				status: true
-				while [all [status i > 0]] [
-					either keyword [
-						status: switch keyword keyword-rules
-					][
-						status: switch/default type?/word :token type-rules [	; default
-							either (case and (token == input'/1))
-									or ((not case) and (token = input'/1)) [
-								input': next input'
-								true
-							][
-								false
-							]
-						]
-					]
-					i: i - 1
-				]
-			]
-		][
-			either keyword [
-				switch/default keyword [
-					copy [
-						mark: input'
-						status: true
-					]
-					set [
-						value: input'/1
-						status: switch/default type?/word :token type-rules [	; default
-							either (case and (token == input'/1))
-									or ((not case) and (token = input'/1)) [
-								input': next input'
-								true
-							][
-								false
-							]
-						]
-						if status [set/at var value rules']
-					]
-				][
-					if any [
-						all [
-							not find [end skip |] keyword
-							word! = type? :token
-							find [any copy into opt set some thru to |] :token
-						]
-						all [
-							not find [end thru to] keyword
-							:token == 'end
-						]
-					] [
-						make error! join "PARSE - invalid argument: " :token
-					]
-					status: switch keyword keyword-rules
-					if mark [
-						if mark <> input' [
-							set/at var copy/part mark input' rules'
-						]
-						mark: none
-					]
-				]
-			][
-				either all [
-						datatype! <> type? :token
-						find [get-word! set-word!] type?/word :token
-				] [
-					status: true
-				][
-					status: switch/default type?/word :token type-rules [	; default
-						either (case and (token == input'/1))
-								or ((not case) and (token = input'/1)) [
-							input': next input'
-							true
-						][
-							false
-						]
-					]
-				]
-				if mark [
-					if mark <> input' [
-						set/at var copy/part mark input' rules'
-					]
-					mark: none
-				]
-			]
-		]
-		if not status [
-			input': istack/1
-			if all [rules rules: find rules '|] [
-				if tail? rules: next rules [
-					status: true
-				]
-			]
-		]
-	]
-	remove istack
-	level: level - 1
-	return either level > 0 [
-		status
-	][
-		status and tail? input'
-	]
-]]
-
-;
-;*** String parsing ***
-;
-split-string: make function! [[
-	string [string!]
-	split-by [bitset!]
-	/local result mark
-][
-	result: clear []
-	while [all [0 < length? string find split-by string/1]] [next 'string]
-	while [0 < length? string] [
-		mark: string
-		while [all [0 < length? string none = find split-by string/1]] [next 'string]
-		insert skip result length? result copy/part mark string
-		while [all [0 < length? string find split-by string/1]] [next 'string]
-	]
-	result
-]]
-
-sparse: func [
-	"Parses a string according to rules."
-	input [string!] "Input string to parse"
-	rules [block! none!] "Rules to parse by"
-	/all "Parses all chars including spaces"
-	/case "Uses case-sensitive comparison"
-	/local keyword-rules type-rules ;get-token
-	i j n keyword token var dest status mark
-	sp rules'
-][
-	rules': rules
-	switch type?/word rules [
-		none! [
-			split-string input make bitset! "^-^/ ,;"
-		]
-		string! [
-			split-string input make bitset! insert "^-^/ ,;" rules
-		]
-		block! [
-			sp: make bitset! "^-^/ ,;"
-			keyword-rules: [
-				any [
-					until [
-						not switch/default type?/word :token type-rules [	; default
-							; Skip white space
-							if not all [
-								while [if not tail? input' [if find sp input'/1 [true]]] [next 'input']
-							]
-							either (case and (token == copy/part input' length? token))
-									or ((not case) and (token = copy/part input' length? token)) [
-								input': skip input' length? token
-								true
-							][
-								false
-							]
-						]
-					]
-					true
-				]
-				end [
-					; Skip white space
-					if not all [
-						while [if not tail? input' [if find sp input'/1 [true]]] [next 'input']
-					]
-					tail? input'
-				]
-				opt [
-					switch/default type?/word :token type-rules [	; default
-						; Skip white space
-						if not all [
-							while [if not tail? input' [if find sp input'/1 [true]]] [next 'input']
-						]
-						if (case and (token == copy/part input' length? token))
-								or ((not case) and (token = copy/part input' length? token)) [
-							input': skip input' length? token
-						]
-					]
-					true
-				]
-				skip [
-					either tail? input' [
-						false
-					][
-						next 'input'
-						true
-					]
-				]
-				some [
-					if status: switch/default type?/word :token type-rules [	; default
-						; Skip white space
-						if not all [
-							while [if not tail? input' [if find sp input'/1 [true]]] [next 'input']
-						]
-						either (case and (token == copy/part input' length? token))
-								or ((not case) and (token = copy/part input' length? token)) [
-							input': skip input' length? token
-							true
-						][
-							false
-						]
-					] [
-						until [
-							not switch/default type?/word :token type-rules [	; default
-								; Skip white space
-								if not all [
-									while [if not tail? input' [if find sp input'/1 [true]]] [
-										next 'input'
-									]
-								]
-								either (case and (token == copy/part input' length? token))
-										or ((not case) and (token = copy/part input' length? token)) [
-									input': skip input' length? token
-									true
-								][
-									false
-								]
-							]
-						]
-						status: true
-					]
-					status
-				]
-				thru [
-					either token = 'end [
-						false
-					][
-						either none = dest: find input' token [
-							false
-						][
-							input': skip dest length? token
-							true
-						]
-					]
-				]
-				to [
-					either token = 'end [
-						input': tail input'
-						true
-					][
-						either none = dest: find input' token [
-							false
-						][
-							input': dest
-							true
-						]
-					]
-				]
-				| [
-					rules: none
-					true
-				]
-			]
-
-			type-rules: [
-				none! [
-					true
-				]
-				char! [
-					; Skip white space
-					if not all [
-						while [if not tail? input' [if find sp input'/1 [true]]] [next 'input']
-					]
-					either token = input'/1 [
-						next 'input'
-						true
-					][
-						false
-					]
-				]
-				bitset! [
-					; Skip white space
-					if not all [
-						while [if not tail? input' [if find sp input'/1 [true]]] [next 'input']
-					]
-					either tail? input' [
-						false
-					][
-						either find token input'/1 [
-							next 'input'
-							true
-						][
-							false
-						]
-					]
-				]
-				block! [
-					either all [
-						either case [
-							sparse/all/case input' token
-						][
-							sparse/all input' token
-						]
-					][
-						either case [
-							sparse/case input' token
-						][
-							sparse input' token
-						]
-					]
-				]
-				paren! [
-					do token
-					true
-				]
-				datatype! [
-					make error! join "PARSE - invalid rule: " token
-				]
-			]
-
-			insert/only istack input
-			input': input
-
-			level: level + 1
-			mark: none
-
-			status: true
-			while [if rules [if not tail? rules [true]]] [
-				i: j: keyword: none
-				;get-token
-				token: rules/1
-				next 'rules
-				if word! = type? :token [
-					if not find [any copy end opt skip some thru to |] token [
-						token: get/at token rules'
-					]
-				]	; get-token end
-				switch/default type?/word :token [
-					none! char! bitset! block! paren! datatype! []
-					integer! [
-						i: max 0 token
-						;get-token
-						token: rules/1
-						next 'rules
-						if word! = type? :token [
-							if not find [any copy end opt skip some thru to |] token [
-								token: get/at token rules'
-							]
-						]	; get-token end
-						switch/default type?/word :token [
-							none! [
-								make error! join "PARSE - unexpected end of rule after: " i
-							]
-							char! bitset! block! paren! datatype! []
-							integer! [
-								j: token
-								;get-token
-								token: rules/1
-								next 'rules
-								if word! = type? :token [
-									if not find [any copy end opt skip some thru to |] token [
-										token: get/at token rules'
-									]
-								]	; get-token end
-								switch/default type?/word :token [
-									none! [
-										make error! join "PARSE - unexpected end of rule after: " j
-									]
-									char! bitset! block! paren! datatype! []
-									word! [
-										either find [end skip |] token [
-											keyword: token
-										][
-											if find [any opt some thru to] token [
-												keyword: token
-												;get-token
-												token: rules/1
-												next 'rules
-												if word! = type? :token [
-													if not find [any copy end opt
-															skip some thru to |] token [
-														token: get/at token rules'
-													]
-												]	; get-token end
-												switch/default type?/word :token [
-													none! char! bitset! block! paren! datatype! []
-												] [
-													mold token
-												]
-											]
-										]
-									]
-								] [	; default
-									token: form :token
-								]
-							]
-							word! [
-								either find [end skip |] token [
-									keyword: token
-								][
-									if find [any opt some thru to] token [
-										keyword: token
-										;get-token
-										token: rules/1
-										next 'rules
-										if word! = type? :token [
-											if not find [any copy end opt skip some thru to |] token [
-												token: get/at token rules'
-											]
-										]	; get-token end
-										switch/default type?/word :token [
-											none! char! bitset! block! paren! datatype! []
-										] [
-											mold token
-										]
-									]
-								]
-							]
-						] [	; default
-							token: form :token
-						]
-					]
-					word! [
-						switch token [
-							any opt some thru to [
-								keyword: token
-								;get-token
-								token: rules/1
-								next 'rules
-								if word! = type? :token [
-									if not find [any copy end opt skip some thru to |] token [
-										token: get/at token rules'
-									]
-								]	; get-token end
-								switch/default type?/word :token [
-									none! char! bitset! block! paren! datatype! []
-								] [
-									mold token
-								]
-							]
-							end skip | [keyword: token]
-							copy [
-								keyword: token
-								var: rules/1
-								next 'rules
-								if word! <> type? :var [
-									make error! join "PARSE - invalid argument: " :var
-								]
-							]
-						]
-					]
-					set-word! [
-						set/at token input' rules'
-					]
-					get-word! [
-						input': get/at token rules'
-					]
-				] [	; default
-					token: form :token
-				]
-				either i [
-					either j [
-						status: true
-						n: i
-						while [n > 0 and status] [
-							either keyword [
-								status: switch keyword keyword-rules
-							][
-								status: switch/default type?/word :token type-rules [	; default
-									; Skip white space
-									if not all [
-										while [if not tail? input' [if find sp input'/1 [true]]] [
-											next 'input'
-										]
-									]
-									either (case and (token == copy/part input' length? token))
-											or ((not case)
-											and (token = copy/part input' length? token)) [
-										input': skip input' length? token
-										true
-									][
-										false
-									]
-								]
-							]
-							n: n - 1
-						]
-						if status [
-							n: j - i
-							while [n > 0 and status] [
-								either keyword [
-									status: switch keyword keyword-rules
-								][
-									status: switch/default type?/word :token type-rules [	; default
-										; Skip white space
-										if not all [
-											while [if not tail? input' [if find sp input'/1 [true]]] [
-												next 'input'
-											]
-										]
-										either (case and (token == copy/part input' length? token))
-												or ((not case)
-												and (token = copy/part input' length? token)) [
-											input': skip input' length? token
-											true
-										][
-											false
-										]
-									]
-								]
-								n: n - 1
-							]
-							status: true
-						]
-					][
-						status: true
-						while [i > 0 and status] [
-							either keyword [
-								status: switch keyword keyword-rules
-							][
-								status: switch/default type?/word :token type-rules [	; default
-									; Skip white space
-									if not all [
-										while [if not tail? input' [if find sp input'/1 [true]]] [
-											next 'input'
-										]
-									]
-									either (case and (token == copy/part input' length? token))
-											or ((not case)
-											and (token = copy/part input' length? token)) [
-										input': skip input' length? token
-										true
-									][
-										false
-									]
-								]
-							]
-							i: i - 1
-						]
-					]
-				][
-					either keyword [
-						switch/default keyword [
-							copy [
-								; Skip white space
-								if not all [
-									while [if not tail? input' [if find sp input'/1 [true]]] [
-										next 'input'
-									]
-								]
-								mark: input'
-								status: true
-							]
-						][
-							if any [
-								if not find [end skip |] keyword [
-									if word! = type? :token [
-										if find [any copy opt some thru to |] :token [
-											true
-										]
-									]
-								]
-								if not find [end thru to] keyword [
-									if :token == 'end [
-										true
-									]
-								]
-							] [
-								make error! join "PARSE - invalid argument: " :token
-							]
-							status: switch keyword keyword-rules
-							if mark [
-								if mark <> input' [
-									set/at var copy/part mark input' rules'
-								]
-								mark: none
-							]
-						]
-					][
-						either (datatype! <> type? :token)
-								and find [get-word! set-word!] type?/word :token [
-							status: true
-						][
-							status: switch/default type?/word :token type-rules [	; default
-								; Skip white space
-								if not all [
-									while [if not tail? input' [if find sp input'/1 [true]]] [
-										next 'input'
-									]
-								]
-								either (case and (token == copy/part input' length? token))
-										or ((not case) and (token = copy/part input' length? token)) [
-									input': skip input' length? token
-									true
-								][
-									false
-								]
-							]
-						]
-						if mark [
-							if mark <> input' [
-								set/at var copy/part mark input' rules'
-							]
-							mark: none
-						]
-					]
-				]
-				if not status [
-					input': istack/1
-					if rules [
-						if rules: find rules '| [
-							if tail? next 'rules [
-								status: true
-							]
-						]
-					]
-				]
-			]
-			; Skip white space
-			if not all [
-				while [if not tail? input' [if find sp input'/1 [true]]] [next 'input']
-			]
-			remove istack
-			level: level - 1
-			return either level > 0 [
-				status
-			][
-				status and tail? input'
-			]
-		]
-	]
-]
-
-set 'parse make function! [[
-	"Parses a series according to rules."
-	input [series!] "Input series to parse"
-	rules [block!] "Rules to parse by"
-	/all "Parses all chars including spaces"
-	/case "Uses case-sensitive comparison"
-][
-	clear istack
-	level: 0
-
-	switch/default type?/word input [
-		block! paren! path! [
-			either case [
-				bparse/case input rules
-			][
-				bparse input rules
-			]
-		]
-		string! binary! file! url! tag! issue! KWATZ! [
-			either all [
-				either case [
-					sparse/all/case to string! input rules
-				][
-					sparse/all to string! input rules
-				]
-			][
-				either case [
-					sparse/case to string! input rules
-				][
-					sparse to string! input rules
-				]
-			]
-		]
-	] [
-		make error! "parse expected input argument of type: series!"
-	]
-]]
-]	; context
-;}	; comment
-
-; Sets
-bitset: make function! [[
-	"Defines a bitset of characters."
-	chars [string! block!]
-][
-	make bitset! chars
-]]
-
-; Strings
-form: make function! [[
-	"Converts a value to a string."
-	value "The value to form"
-	/local result
-][
-	switch/default type?/word :value [
-		string! [
-			value
-		]
-		block! paren! [
-			result: make string! 8
-			if 0 < length? value [
-				insert result form value/1
-				next 'value
-				while [0 < length? value] [
-					result: skip result length? result	; result: tail result
-					insert result " "
-					next 'result
-					insert result form value/1
-					next 'value
-				]
-			]
-			skip result (- (index? result) - 1)		; head result
-		]
-		binary! tag! path! set-path! get-path! lit-path! [
-			mold value
-		]
-		datatype! [
-			result: to string! value
-			if #"!" = pick result length? result [
-				remove skip result (length? result) - 1
-			]
-			result
-		]
-	] [
-		to string! value
-	]
-]]
-lowercase: make function! [[
-	"Converts string of characters to lowercase."
-	string [any-string! char!]
-][
-	either char! = type? string [
-		either string >= #"A" and (string <= #"Z") [
-			string + 32
-		][
-			string
+			s: loaded
+			values: read %./
 		]
 	][
-		while [0 < length? string] [
-			if string/1 >= #"A" and (string/1 <= #"Z") [
-				string/1: string/1 + 32
-			]
-			string: next string
-		]
-		head string
-	]
-]]
-trim: make function! [[
-	"Removes whitespace from a string. Default removes from head and tail."
-	string [any-string!]
-	/head "Removes only from the head"
-	/tail "Removes only from the tail"
-	/lines "Removes all line breaks and extra spaces"
-	/local ptr stop
-][
-	ptr: string
-	if tail = none or head [
-		while [all [0 < length? ptr find [#" " #"^-" #"^/"] ptr/1]] [
-			remove ptr
-		]
-	]
-	if head = none or tail and (0 < length? ptr) [
-		ptr: skip ptr -1 + length? ptr
-		while [all [(index? ptr) >= index? string 0 < length? ptr find [#" " #"^-" #"^/"] ptr/1]] [
-			remove ptr
-			back 'ptr
-		]
-	]
-	if lines [
-		ptr: string
-		while [all [0 < length? ptr find [#" " #"^-" #"^/"] ptr/1]] [
-			next 'ptr
-		]
-		stop: skip string -1 + length? string
-		while [all [(index? stop) >= index? ptr find [#" " #"^-" #"^/"] stop/1]] [
-			back 'stop
-		]
-		while [all [(index? ptr) < index? stop 0 < length? ptr]] [
-			either find [#" " #"^-" #"^/"] ptr/1 [
-				ptr/1: #" "
-				next 'ptr
-				while [all [0 < length? ptr find [#" " #"^-" #"^/"] ptr/1]] [
-					remove ptr
+		either path! = type? loaded [
+			s: find/last line #"/"
+			values: get pick load copy/part line s 1
+			either context! = type? values [
+				values: to block! values
+				while [0 < length? values] [
+					poke values 1 to string! values/1
+					next' values
+					remove values
 				]
+				head' values
 			][
-				next 'ptr
+				values: read %./
+				foreach [word val] to block! system/words [
+					append values to string! word
+				]
 			]
-		]
-	]
-	string
-]]
-uppercase: make function! [[
-	"Converts string of characters to uppercase."
-	string [any-string! char!]
-][
-	either char! = type? string [
-		either string >= #"a" and (string <= #"z") [
-			string - 32
+			next' s
 		][
-			string
-		]
-	][
-		while [0 < length? string] [
-			if string/1 >= #"a" and (string/1 <= #"z") [
-				string/1: string/1 - 32
+			s: line
+			values: read %./
+			foreach [word val] to block! system/words [
+				append values to string! word
 			]
-			string: next string
 		]
-		head string
 	]
+	l: length? s
+	forall values [
+		if l <= length? pick values 1 [
+			if 0 = strncmp s pick values 1 l [
+				append selected pick values 1
+			]
+		]
+	]
+	either 0 = length? selected [
+		result: ""
+	][
+		either 1 = length? selected [
+			result: skip pick selected 1 l
+			append result #" "
+		][
+			either attempt = 1 [
+				min-l: strspn pick selected 1 pick selected 2
+				s: pick selected 1
+				next' selected
+				forall selected [
+					min-l: min min-l strspn s pick selected 1
+				]
+				result: skip copy/part s min-l l
+			][
+				prin #"^/"
+				forall selected [
+					if file! = type? pick selected 1 [
+						;change selected mold pick selected 1
+						poke selected 1 mold pick selected 1
+					]
+				]
+				selected: sort selected
+				sys-utils/columnize selected
+				head' line
+				prin system/console/prompt
+				prin line
+				result: ""
+			]
+		]
+	]
+	return result
 ]]
 
-; System
-.: make function! [[][print "Hello, World!"]]
-include: make function! [[
-	file [file!]
-	/local do-file
-][
-	do-file: copy system/options/path
-	insert skip do-file length? do-file %libs/
-	insert skip do-file length? do-file file
-	do do-file
-]]
-;comment [
-sys-utils: make context! [
-	print-last-error: make function! [[
-		/local err id
-	][
-		err: select system/standard/errors system/state/last-error/type
-		prin "** "
-		prin err/type
-		prin ": "
-		id: select err system/state/last-error/id
-		print either block! = type? id [
-			compile/at id system/state/last-error
-		][
-			id
-		]
-		prin "** Near: "
-		print system/state/last-error/near
-	]]
-]
+]; sys-utils
 ;]	; comment
 
 ; Additional functionality
-;comment [
 net-utils: make context! [
 
 URL-Parser: make context! [
 
-scheme: none
-user: none
-pass: none
-host: none
-port-id: none
-path: none
-target: none
-tag: none
+scheme: user: pass: host: port-id: path: target: tag: none
 
 digit: make bitset! "0123456789"
 alpha-num: make bitset! "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -2412,8 +3074,10 @@ url-rules: [scheme-part user-part host-part path-part file-part tag-part]
 scheme-part: [copy scheme some scheme-char #":" ["//" | none]]
 user-part: [
 	copy user [uchars #"@" uchars] [#":" pass-part | none] #"@"
+	;| (free user free pass user: pass: none) copy user uchars [#":" pass-part | none] #"@"
+	;| none (free user free pass user: pass: none)
 	| copy user uchars [#":" pass-part | none] #"@"
-	| none (user: pass: none)
+	| none
 ]
 pass-part: [copy pass to #"@"]
 host-part: [copy host uchars [#":" copy port-id digits | none]]
@@ -2430,22 +3094,17 @@ parse-url: make function! [[
 	port [port!]
 	url [url!]
 ][
-	scheme: none
-	user: none
-	pass: none
-	host: none
-	port-id: none
-	path: none
-	target: none
-	tag: none
+	free-all [scheme user pass host port-id path target tag]
+	scheme: user: pass: host: port-id: path: target: tag: none
 
 	if parse/all url url-rules [
-		if user [set/at 'user user port]	;port/user: user
-		if pass [set/at 'pass pass port]	;port/pass: pass
-		if host [set/at 'host host port]	;port/host: host
-		if port-id [set/at 'port-id port-id port]	;port/port-id: to integer! port-id
-		if path [set/at 'path path port]	;port/path: path
-		if target [set/at 'target target port]	;port/target: target
+		retain-all [scheme user pass host port-id path target tag]
+		if user [set/at 'user copy user port]				;port/user: user
+		if pass [set/at 'pass copy pass port]				;port/pass: pass
+		if host [set/at 'host copy host port]				;port/host: host
+		if port-id [set/at 'port-id copy port-id port]		;port/port-id: to integer! port-id
+		if path [set/at 'path copy path port]				;port/path: path
+		if target [set/at 'target copy target port]			;port/target: target
 		;if all [set-scheme scheme] [port/scheme: to-word scheme]
 		if scheme [set/at 'scheme first load scheme port]	;port/scheme: to word! scheme
 		port
@@ -2455,24 +3114,22 @@ parse-url: make function! [[
 ]	; URL-Parser
 
 ]	; net-utils
-;]	; comment
 
-; TODO World doesn't like the next line!? Making some strange mem problems.
-;c: make function! [[][do %cortex.w]]
 m: make function! [[][do %test/cmandelbrot.w]]
 test: make function! [[][do %test/test.w]]
-dt: time: make function! [[
+dt: make function! [[
 	"Time the execution of a block"
-	block [block!]
+	block [block! function! routine!]
 	/local t
 ][
 	t: now/time/precise
-	do block
+	do :block
 	now/time/precise - t
 ]]
-;do %user.w
+do %user.w
 
 if system/options/quiet = false [
 	print "Done"
 ]
 
+;}	; comment

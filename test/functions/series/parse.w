@@ -2,3 +2,4 @@
 [false == parse [1][word!]]
 [true == parse "<a>" [<A>]]
 [false == parse/case "<a>" [<A>]]
+[true == parse "ab" ["a" ["b"]]]

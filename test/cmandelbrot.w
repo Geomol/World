@@ -3,8 +3,13 @@ World [
 	Author:	"John Niclasen"
 ]
 
-BAILOUT: 4.0
-MAX_ITERATIONS: 1000
+if value? 'iterate [
+	free :iterate
+	free :mandelbrot
+]
+
+;BAILOUT: 4.0
+;MAX_ITERATIONS: 1000
 
 iterate: func [
 	c
@@ -13,9 +18,11 @@ iterate: func [
 	z: 0i
 	n: 0
 	
-	while [MAX_ITERATIONS >= next 'n] [
+	;while [MAX_ITERATIONS >= next 'n] [
+	while [1000 >= next 'n] [
 		z: z * z + c
-		if BAILOUT < abs z [
+		;if BAILOUT < abs z [
+		if 4.0 < abs z [
 			return n
 		]
 	]
@@ -28,7 +35,8 @@ mandelbrot: func [
 	t: now/time/precise
 	for y -59 18 1 [
 		for x -39 38 1 [
-			prin either iterate x * 1i + y / 40 [" "] ['*]
+			;prin either iterate x * 1i + y / 40 [" "] ['*]
+			prin either iterate x * 1i + y / 40 [#" "] [#"*"]
 		]
 		prin newline
 	]
