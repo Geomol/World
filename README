@@ -3,7 +3,7 @@ This is an alpha release. For testing only. Use at your own risk. Do not distrib
 To run a test
 -------------
 Pick one of the world_* files and rename it to 'world' - then make it executable. (Rename 'world_win32.exe' to 'world.exe' under Windows).
-Also download "cortex.w", "user.w" and the mezz/ and test/ directories.
+Also download "cortex.w", "user.w" and the libs/, mezz/ and test/ directories (or just the whole ZIP).
 Start world from a terminal.
 At the world prompt do this:
 
