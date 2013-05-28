@@ -37,46 +37,41 @@ glob2: make function! [[
 	; segment with meta character found.
 	while [true] [
 		if pattern = % [	; end of pattern ?
-			;remove/part pathend length? pathend
 			clear pathend
-			if true = error? try [query pathbuf] [
+			if error? try [query pathbuf] [
 				return 0
 			]
 			append pglob copy pathbuf
 			return 0
 		]
 		; Find end of next segment, copy tentatively to pathend.
-		q: copy/shallow pathend
-		p: copy/shallow pattern
-		while [p <> % and (#"/" <> pick p 1)] [
-			if find [#"*" #"?"] pick p 1 [
-				anymeta: 1
-			]
-			either q = % [
-				append q pick p 1
-			][
-				poke q 1 pick p 1
-			]
-			next 'p
-			next 'q
+		if none = p: find pattern "/" [
+			p: tail pattern
 		]
+		append pathend copy/part pattern p
+		q: tail pathend
+		if any [find pathend #"*" find pathend #"?"] [
+			anymeta: 1
+		]
+
+
 		either anymeta = 0 [	; No expansion, do next segment.
 			pathend: q
 			pattern: p
 			while [#"/" = pick pattern 1] [
-				either pathend = % [
+				;either pathend = % [
 					append pathend #"/"
-				][
-					poke pathend 1 #"/"
-				]
-				next 'pathend
-				next 'pattern
+				;][
+					;poke pathend 1 #"/"
+				;]
+				next' pathend
+				next' pattern
 			]
 		][	; Need expansion, recurse.
 			return glob3 pathbuf pathend pattern p pglob
 		]
 	]
-	; NOTREACHED
+	; NOT REACHED
 ]]
 
 
@@ -87,9 +82,8 @@ glob3: make function! [[
 	pattern
 	restpattern
 	pglob
-	/local dir info sc dc err
+	/local dir info err
 ][
-	;remove/part pathend length? pathend
 	clear pathend
 	either pathbuf = % [
 		dir: %./
@@ -104,29 +98,25 @@ glob3: make function! [[
 	]
 	; Search directory for matching names.
 	foreach file read dir [
+		if #"/" = last file [remove/last file]
 		; Initial DOT must be matched literally.
-		either (#"." = pick file 1) and (#"." <> pick pattern 1) [
+		;either (#"." = pick file 1) and (#"." <> pick pattern 1) [
 			; skip it
-		][
-			sc: copy/shallow file
-			dc: copy/shallow pathend
-			while [sc <> %] [
-				;either dc = % [
-					append dc pick sc 1
-				;][
-					;poke dc 1 pick sc 1
-				;]
-				next 'sc
-				next 'dc
-			]
+		;][
+		if (#"." <> pick file 1) or (#"." = pick pattern 1) [
+			;clear pathend
+			append pathend file
+
+
 			if match copy/shallow pathend copy/shallow pattern copy/shallow restpattern [
-				err: glob2 pathbuf dc restpattern pglob
+				err: glob2 pathbuf tail pathend restpattern pglob
 				if err <> 0 [
 					return err
 				]
+			;][
+				;clear pathend
 			]
-			;remove/part pathend length? pathend
-			clear pathend
+				clear pathend
 		]
 	]
 ]]
@@ -142,8 +132,8 @@ match: make function! [[
 	/local c
 ][
 	while [(index? pat) < index? patend] [
-		c: pick pat 1
-		next 'pat
+		c: pat/1
+		next' pat
 		either c = #"*" [
 			if (index? pat) = index? patend [
 				return true
@@ -152,7 +142,7 @@ match: make function! [[
 				return true
 			]
 			while [name <> %] [
-				next 'name
+				next' name
 				if match copy/shallow name copy/shallow pat copy/shallow patend [
 					return true
 				]
@@ -163,12 +153,12 @@ match: make function! [[
 				if name = % [
 					return false
 				]
-				next 'name
+				next' name
 			][
-				if c <> pick name 1 [
+				if c <> name/1 [
 					return false
 				]
-				next 'name
+				next' name
 			]
 		]
 	]

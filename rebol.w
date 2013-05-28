@@ -1,8 +1,10 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		26-May-2013
-	Version:	0.0.24
+	Date:		28-May-2013
+	Version:	0.0.26
 	History: [
+		0.0.26	[28-5-2013	JN	{Moved last to cortex.w}]
+		0.0.25	[26-5-2013	JN	{Added fourth, fifth, ...}]
 		0.0.24	[26-5-2013	JN	{Changed many function defs to use func and pick
 								 Freed tan}]
 		0.0.23	[26-5-2013	JN	{Added last}]
@@ -372,6 +374,48 @@ load: make function! [[
 }
 
 ; Series
+fourth: make function! [[
+	"Fourth value of a series."
+	series [series! date! tuple!]
+][
+	pick series 4
+]]
+fifth: make function! [[
+	"Fifth value of a series."
+	series [series! date! tuple!]
+][
+	pick series 5
+]]
+sixth: make function! [[
+	"Sixth value of a series."
+	series [series! date! tuple!]
+][
+	pick series 5
+]]
+seventh: make function! [[
+	"Seventh value of a series."
+	series [series! date! tuple!]
+][
+	pick series 7
+]]
+eight: make function! [[
+	"Eight value of a series."
+	series [series! date! tuple!]
+][
+	pick series 8
+]]
+ninth: make function! [[
+	"Ninth value of a series."
+	series [series! date! tuple!]
+][
+	pick series 9
+]]
+tenth: make function! [[
+	"Tenth value of a series."
+	series [series! date! tuple!]
+][
+	pick series 10
+]]
 comment {
 world_append: :append
 append: make function! [[
@@ -429,13 +473,6 @@ insert: make function! [[
 			]
 		]
 	]
-]]
-last: make function! [[
-	"Last value of a series."
-	[retain]
-	value [series!]
-][
-	pick tail value -1
 ]]
 new-line?:	func pick :newline? 1 pick :newline? 2
 new-line:	func pick :set-newline 1 pick :set-newline 2

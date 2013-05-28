@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		26-May-2013
-	Version:	0.6.12
+	Date:		28-May-2013
+	Version:	0.6.13
 	History: [
+		0.6.13	[28-05-2013	JN	{Added last}]
 		0.6.12	[26-05-2013	JN	{Added of
 								 Removed /deg from arccos, arcsin and arctan
 								 Added to-deg
@@ -1121,6 +1122,13 @@ first: make function! [[
 	series [series! complex! operator! function! routine!]
 ][
 	pick :series 1
+]]
+last: make function! [[
+	"Last value of a series."
+	[retain]
+	value [series!]
+][
+	pick tail value -1
 ]]
 second: make function! [[
 	"Second value of a series."
@@ -2958,7 +2966,6 @@ strspn: make function! [[
 
 tab-completion: make function! [[
 	"Console <tab> completion."
-	[retain]	; TODO really?
 	line	[string!]
 	attempt	[integer!]
 	/local result values selected end-chars l min-l s loaded	; CANNOT change # of locals (see lex.c)
