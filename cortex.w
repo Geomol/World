@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		28-May-2013
-	Version:	0.6.13
+	Date:		31-May-2013
+	Version:	0.6.14
 	History: [
+		0.6.14	[31-05-2013	JN	{Changed form regarding integer!}]
 		0.6.13	[28-05-2013	JN	{Added last}]
 		0.6.12	[26-05-2013	JN	{Added of
 								 Removed /deg from arccos, arcsin and arctan
@@ -2433,7 +2434,7 @@ detab: make function! [[
 	out
 ]]
 form: make function! [[
-	"Convert a value to a string."
+	"Form a value into a string."
 	[retain]
 	value "The value to form"
 	/local result
@@ -2459,7 +2460,7 @@ form: make function! [[
 			]
 			head' result
 		]
-		binary! tag! path! set-path! get-path! lit-path! [
+		integer! binary! tag! path! set-path! get-path! lit-path! [
 			mold value
 		]
 		datatype! [
