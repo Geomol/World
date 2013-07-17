@@ -1,0 +1,24 @@
+17-Jul-2013
+-----------
+- Added better networking using cURL library, libcurl (OS X and Linux)
+- Added tasks incl.:
+	- task! datatype
+	- task-id! datatype
+	- TASKS native function
+	- task? and task-id? mezzanines
+	- Task support for many functions incl. HELP, SOURCE, FIRST, SECOND, PICK, COMPILED? and DISASM
+	- KILL mezzanine to call TASKS/KILL
+- Added inter-task communication using SEND and RECEIVE native functions
+- Added support for messages to WAIT as: wait 'message
+- Added preemptive multitasking using TASKS/TICK to specify number of Virtual Machine instructions per task run (default is 200)
+- Added timers for tasks triggered by WAIT native and READ native, when reading from url
+- Task yield can be achieved by: wait 0
+- Changed ;{ } comment syntax to ;( )
+- Parens can now span several lines at the prompt
+- Added system/console/paren
+- Added support for pressing <Esc> to stop execution of main task
+- Sending input via pipe to World started with a script will activate input without echo and without <tab>-completion etc.. (Not sure how and if this works under Windows.)
+- Added support for picking 'Re and 'Im of complex numbers
+- Better implementation of TRY
+- New test versions of IF and EITHER, that can take other than block! arguments
+- Added more tests
