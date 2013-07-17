@@ -8,13 +8,13 @@ is: make operator! [[
 	value
 	series [datatype! typeset! series!]
 ][
-	either datatype? series [
+	either datatype? :series [
 		series = type? :value
 	][
-		either typeset? series [
+		either typeset? :series [
 			find series type? :value
 		][
-			either series? series [
+			either series? :series [
 				find series :value
 			][
 				:value = :series

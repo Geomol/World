@@ -410,7 +410,7 @@ l: make function! [[
 		append s "-"
 		append s copy/part pick system/locale/months info/date/month 3
 		append s " "
-		either 365 <= now/date - info/date [
+		either now/date - info/date >= 365 [
 			append s " "
 			append s info/date/year
 		][

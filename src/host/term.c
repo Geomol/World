@@ -4,6 +4,7 @@
  */
 
 
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -24,13 +25,15 @@ static struct termios old;
 
 void set_raw () {
 #ifdef WORLD_OF_POSIX
-	tcgetattr (fileno (stdin), &old);
+	int stdin_fileno = fileno (stdin);
+	tcgetattr (stdin_fileno, &old);
 	struct termios trm;
 	//cfmakeraw (&trm);
 	trm = old;
 	trm.c_lflag &= ~(ECHO | ICANON);
 	trm.c_lflag |= ECHONL;
-	tcsetattr (fileno (stdin), TCSAFLUSH, &trm);
+	tcsetattr (stdin_fileno, TCSAFLUSH, &trm);
+	fcntl (stdin_fileno, F_SETFL, O_NONBLOCK);
 #endif
 }
 

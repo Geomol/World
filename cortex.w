@@ -1,8 +1,16 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		31-May-2013
-	Version:	0.6.14
+	Date:		10-Jul-2013
+	Version:	0.6.20
 	History: [
+		0.6.20	[10-07-2013	JN	{Changed input to not use trim}]
+		0.6.19	[02-07-2013	JN	{Added task-id! to any-type!
+								 Added task-id?}]
+		0.6.18	[19-06-2013	JN	{Added task! to any-function!
+								 Added support for task! to several functions}]
+		0.6.17	[07-06-2013	JN	{Added kill}]
+		0.6.16	[04-06-2013	JN	{Added task, task! and task?}]
+		0.6.15	[02-06-2013	JN	{Added bitset! and tuple! to any-type!}]
 		0.6.14	[31-05-2013	JN	{Changed form regarding integer!}]
 		0.6.13	[28-05-2013	JN	{Added last}]
 		0.6.12	[26-05-2013	JN	{Added of
@@ -139,12 +147,12 @@ off:	make logic!	0
 on:		make logic!	1
 
 any-block!:		make typeset! [block! paren! path! set-path! get-path! lit-path!]
-any-function!:	make typeset! [operator! function! routine!]
+any-function!:	make typeset! [operator! function! routine! task!]
 any-object!:	make typeset! [context! error! port!]
 any-paren!:		make typeset! [paren!]
 any-path!:		make typeset! [path! set-path! get-path! lit-path!]
 any-string!:	make typeset! [string! binary! file! url! tag! issue!]
-any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! range! time! date! string! binary! file! url! tag! issue! block! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! context! error! port! handle! struct! library! KWATZ!]
+any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! range! time! date! string! binary! file! url! tag! issue! bitset! tuple! block! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! context! error! task! task-id! port! handle! struct! library! KWATZ!]
 any-word!:		make typeset! [word! set-word! get-word! lit-word! refinement!]
 number!:		make typeset! [integer! real! complex! percent!]
 scalar!:		make typeset! [integer! real! complex! percent! char! range! tuple! time!]
@@ -454,6 +462,14 @@ switch: make function! [[
 		if default [do case]
 	]
 ]]
+task: make function! [[
+	"Define a task with given spec and body."
+	[retain]
+	spec [block!] {"Description"}
+	body [block!] "The body block of the task"
+][
+	make task! reduce [spec body]
+]]
 until: make function! [[
 	"Evaluate a block until it is true."
 	[throw retain]
@@ -499,6 +515,8 @@ function?:		make function! [["True for function values." value][function! = type
 routine?:		make function! [["True for routine values." value][routine! = type? :value]]
 context?:		make function! [["True for context values." value][context! = type? :value]]
 error?:			make function! [["True for error values." value][error! = type? :value]]
+task?:			make function! [["True for task values." value][task! = type? :value]]
+task-id?:		make function! [["True for task-id values." value][task-id! = type? :value]]
 port?:			make function! [["True for port values." value][port! = type? :value]]
 library?:		make function! [["True for library values." value][library! = type? :value]]
 KWATZ?:			make function! [["True for KWATZ values." value][KWATZ! = type? :value]]
@@ -522,6 +540,7 @@ probe: make function! [[
 ][
 	print mold :value :value
 ]]
+;do %mezz/dump-obj.w
 dump-obj: make function! [[
 	"Return a block of information about an object or port."
 	obj [context! error! port!]
@@ -615,7 +634,20 @@ More information: http://www.world-lang.org
     if all [word? :word false = value? :word] [
         print ["No information on" mold :word]
         exit
-	] 
+	]
+	comment {
+    if any [string? :word all [word? :word datatype? get :word]] [
+        types: dump-obj/match system/words :word
+        ;types: dump-obj system/words :word
+        sort types
+        if not empty? types [
+            print ["Found these words:" newline types]
+            exit
+        ]
+        print ["No information on" word "(word has no value)"]
+        exit
+    ]
+	}
 	if all [word! <> type? :word path! <> type? :word] [
 		prin [mold :word "is "]
 		print either find "aeiou" first mold type? :word [
@@ -634,7 +666,7 @@ More information: http://www.world-lang.org
 		][
 			["a" type? :value "of value: "]
 		]
-		print either any-object? :value [print "" dump-obj value] [mold :value]
+		print either any-object? :value [print "" dump-obj :value] [mold :value]
 		exit
 	]
 	args: pick :value 1
@@ -653,7 +685,7 @@ More information: http://www.world-lang.org
 	][
 		prin mold word
 		item: args/1
-		either function! = type? :value [
+		either find [function! task!] type?/word :value [
 			while [item and ((:item <> /local) or (string! = type? args/2))] [
 				if (string! <> type? :item) and (block! <> type? :item) [
 					prin ["" mold :item]
@@ -704,7 +736,7 @@ More information: http://www.world-lang.org
 	][
 		att: none
 	]
-	either find [operator! function!] type?/word :value [
+	either find [operator! function! task!] type?/word :value [
 		if find [word! lit-word!] type?/word :item [
 			print "^/Arguments:"
 			while [item and (refinement! <> type? :item)] [
@@ -855,7 +887,7 @@ comment {
 		s
 	][
 		mold :name
-	] 
+	]
     :name
 ]]
 }
@@ -865,7 +897,7 @@ source: make function! [[
 ][
 	prin :word
 	print either value? :word [
-		either find [operator! function! routine!] type?/word :word [
+		either find [operator! function! routine! task!] type?/word :word [
 			[":" mold :word]
 		][
 			[":" mold get word]
@@ -1074,7 +1106,8 @@ input: make function! [[
 	if prompt [
 		prin insert system/console/prompt string
 	]
-	line: trim/lines as string! read system/ports/input
+	;line: trim/lines as string! read system/ports/input
+	line: as string! read system/ports/input
 	insert clear system/console/prompt s
 	line
 ]]
@@ -1120,7 +1153,7 @@ to-world-file: make function! [[
 ; Series
 first: make function! [[
 	"First value of a series."
-	series [series! complex! operator! function! routine!]
+	series [series! complex! operator! function! routine! task!]
 ][
 	pick :series 1
 ]]
@@ -1133,7 +1166,7 @@ last: make function! [[
 ]]
 second: make function! [[
 	"Second value of a series."
-	series [series! complex! operator! function!]
+	series [series! complex! operator! function! task!]
 ][
 	pick :series 2
 ]]
@@ -2592,6 +2625,12 @@ include: make function! [[
 	append do-file %libs/
 	do append do-file file
 ]]
+kill: make function! [[
+	"Terminate a task."
+	task-id [integer!]
+][
+	tasks/kill task-id
+]]
 ;comment [
 sys-utils: make context! [
 
@@ -3028,7 +3067,9 @@ tab-completion: make function! [[
 	][
 		either 1 = length? selected [
 			result: skip pick selected 1 l
-			append result #" "
+			if not all [file! = type? result #"/" = pick tail result -1] [
+				append result #" "
+			]
 		][
 			either attempt = 1 [
 				min-l: strspn pick selected 1 pick selected 2

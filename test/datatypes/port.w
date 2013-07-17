@@ -1,4 +1,4 @@
-[a: open tcp://:8080 close a port! == type? a]
+[a: open tcp://:8081 close a port! == type? a]
 [
 	a: make port! %datatypes/dummy-script.w
 	open a
