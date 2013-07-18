@@ -6,7 +6,7 @@
 	- task-id! datatype
 	- TASKS native function
 	- task? and task-id? mezzanines
-	- Task support for many functions incl. HELP, SOURCE, FIRST, SECOND, PICK, COMPILED? and DISASM
+	- Task support for many functions incl. HELP, SOURCE, FIRST, SECOND and PICK
 	- KILL mezzanine to call TASKS/KILL
 - Added inter-task communication using SEND and RECEIVE native functions
 - Added support for messages to WAIT as: wait 'message
