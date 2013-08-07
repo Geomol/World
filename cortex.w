@@ -1,8 +1,24 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		10-Jul-2013
-	Version:	0.6.20
+	Date:		7-Aug-2013
+	Version:	0.6.21
 	History: [
+		0.6.21	[07-08-2013	JN	{Added pair!
+								 Added pair?
+								 Added as-pair
+								 Added image!
+								 Added image?
+								 Added dehex
+								 Added email!
+								 Added email?
+								 Added list!
+								 Added list?
+								 Added enbase
+								 Added debase
+								 Added actor
+								 Added compose
+								 Fixed parse regarding new mem rules and SET
+								 Improved help}]
 		0.6.20	[10-07-2013	JN	{Changed input to not use trim}]
 		0.6.19	[02-07-2013	JN	{Added task-id! to any-type!
 								 Added task-id?}]
@@ -151,12 +167,12 @@ any-function!:	make typeset! [operator! function! routine! task!]
 any-object!:	make typeset! [context! error! port!]
 any-paren!:		make typeset! [paren!]
 any-path!:		make typeset! [path! set-path! get-path! lit-path!]
-any-string!:	make typeset! [string! binary! file! url! tag! issue!]
-any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! range! time! date! string! binary! file! url! tag! issue! bitset! tuple! block! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! context! error! task! task-id! port! handle! struct! library! KWATZ!]
+any-string!:	make typeset! [string! binary! file! email! url! tag! issue!]
+any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! pair! range! time! date! string! binary! file! email! url! tag! issue! bitset! tuple! image! block! list! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! context! error! task! task-id! port! handle! struct! library! KWATZ!]
 any-word!:		make typeset! [word! set-word! get-word! lit-word! refinement!]
 number!:		make typeset! [integer! real! complex! percent!]
-scalar!:		make typeset! [integer! real! complex! percent! char! range! tuple! time!]
-series!:		make typeset! [string! binary! file! url! tag! issue! block! paren! path! set-path! get-path! lit-path! KWATZ!]
+scalar!:		make typeset! [integer! real! complex! percent! char! pair! range! tuple! time!]
+series!:		make typeset! [string! binary! file! email! url! tag! issue! block! list! paren! path! set-path! get-path! lit-path! KWATZ!]
 
 comment {
 system/schemes: make system/schemes [
@@ -247,16 +263,85 @@ lesser-or-equal?: make function! [[
 context: make function! [[
 	"Define a unique, underived context."
 	[throw retain]	; TODO Thy is throw here?
-	block [block!] "Context variables and values."
+	block [block!] "Context variables and values"
 ][
 	make context! block
 ]]
 
 ; Control
+actor: make function! [[
+	"Define a task after the actor model."
+	[retain]
+	body [block!] "The body block of the actor"
+][
+	insert body [
+		wait 'message
+	]
+	make task! reduce [[] head' set-newline skip' reduce [
+			'while [true] body
+		] 2 false
+	]
+]]
+compose: make function! [[
+	"Evaluate a block of expressions, only evaluate parens, and return a block."
+	[throw retain]
+	value [block!] "Block to compose"
+	/deep "Compose nested blocks"
+	/only "Insert a block value as a block"
+	/local ptr v
+][
+	ptr: copy/shallow value
+	either deep [
+		either only [
+			while [0 < length? ptr] [
+				v: pick ptr 1
+				either block! = type? :v [
+					compose/deep/only v
+				][
+					if paren! = type? :v [
+						insert/only remove ptr do v
+					]
+				]
+				next' ptr
+			]
+		][
+			while [0 < length? ptr] [
+				v: pick ptr 1
+				either block! = type? :v [
+					compose/deep v
+				][
+					if paren! = type? :v [
+						insert remove ptr do v
+					]
+				]
+				next' ptr
+			]
+		]
+	][
+		either only [
+			while [0 < length? ptr] [
+				v: pick ptr 1
+				if paren! = type? :v [
+					insert/only remove ptr do v
+				]
+				next' ptr
+			]
+		][
+			while [0 < length? ptr] [
+				v: pick ptr 1
+				if paren! = type? :v [
+					insert remove ptr do v
+				]
+				next' ptr
+			]
+		]
+	]
+	value
+]]
 does: make function! [[
 	"Define a function that has no arguments."
 	[retain]
-	body [block!] "The body block of the function."
+	body [block!] "The body block of the function"
 ][
 	make function! reduce [[] body]
 	;make function! back insert/only remove next [[]] body
@@ -353,7 +438,7 @@ has: make function! [[
 	"Define a function that has local variables but no arguments."
 	[retain]
 	locals [block!]
-	body [block!] "The body block of the function."
+	body [block!] "The body block of the function"
 ][
 	;make function! reduce [insert insert clear [] locals /local body]
 	;make function! insert/only
@@ -489,15 +574,20 @@ real?:			make function! [["True for real values." value][real! = type? :value]]
 complex?:		make function! [["True for complex values." value][complex! = type? :value]]
 percent?:		make function! [["True for percent values." value][percent! = type? :value]]
 char?:			make function! [["True for char values." value][char! = type? :value]]
+pair?:			make function! [["True for pair values." value][pair! = type? :value]]
+range?:			make function! [["True for range values." value][range! = type? :value]]
 time?:			make function! [["True for time values." value][time! = type? :value]]
 date?:			make function! [["True for date values." value][date! = type? :value]]
 binary?:		make function! [["True for binary values." value][binary! = type? :value]]
 string?:		make function! [["True for string values." value][string! = type? :value]]
 file?:			make function! [["True for file values." value][file! = type? :value]]
+email?:			make function! [["True for email values." value][email! = type? :value]]
 url?:			make function! [["True for url values." value][url! = type? :value]]
 tag?:			make function! [["True for tag values." value][tag! = type? :value]]
 issue?:			make function! [["True for issue values." value][issue! = type? :value]]
+image?:			make function! [["True for image values." value][image! = type? :value]]
 block?:			make function! [["True for block values." value][block! = type? :value]]
+list?:			make function! [["True for list values." value][list! = type? :value]]
 paren?:			make function! [["True for paren values." value][paren! = type? :value]]
 path?:			make function! [["True for path values." value][path! = type? :value]]
 set-path?:		make function! [["True for set-path values." value][set-path! = type? :value]]
@@ -532,6 +622,14 @@ number?:		make function! [["True for number values." value][find number! type? :
 scalar?:		make function! [["True for scalar values." value][find scalar! type? :value]]
 series?:		make function! [["True for series values." value][find series! type? :value]]
 
+as-pair: make function! [[
+	"Combine x and y values into a pair."
+	x [integer! char!]
+	y [integer! char!]
+][
+	add 1x0 * x 0x1 * y
+]]
+
 ; Help
 probe: make function! [[
 	"Print a molded value and return that same value."
@@ -540,11 +638,11 @@ probe: make function! [[
 ][
 	print mold :value :value
 ]]
-;do %mezz/dump-obj.w
 dump-obj: make function! [[
 	"Return a block of information about an object or port."
 	obj [context! error! port!]
-	/local words-of clip-str str form-val val form-pad out type
+	/match "Include only those that match a string or datatype" pat
+	/local words-of clip-str str form-val val form-pad out wild type
 ][
 	words-of: make function! [[
 		[retain]
@@ -587,21 +685,35 @@ dump-obj: make function! [[
 		val
 	]]
 	out: copy []
+	wild: all [string? pat find pat "*"]
 	foreach [word val] to block! obj [
 		type: type?/word :val
-		;str: either find [function! closure! operator! context!] type [
-			;form reduce [word mold spec-of :val words-of :val]
-		;] [
-			;form word
-		;]
-		str: form-pad word 15
-		append str #" "
-		append str form-pad type 10 - ((length? str) - 15)
-		append out form reduce [
-			"  " str
-			;if type <> 'unset! [form-val :val]
-			form-val :val
-			newline
+		if any [
+			not match
+			all [
+				unset! <> type? :val
+				either string! = type? :pat [
+					either wild [
+						"" = find/any/match to string! word pat
+					][
+						find to string! word pat
+					]
+				][
+					all [
+						datatype? get :pat
+						type = :pat
+					]
+				]
+			]
+		][
+			str: form-pad word 15
+			append str #" "
+			append str form-pad type 10 - ((length? str) - 15)
+			append out form reduce [
+				"  " str
+				form-val :val
+				newline
+			]
 		]
 	]
 	out
@@ -609,7 +721,7 @@ dump-obj: make function! [[
 help: make function! [[
 	"Print information about words and values."
 	'word
-	/local value args item arg-no item2 att
+	/local value args item arg-no item2 att types
 ][
 	if false = value? 'word [
 		print {To use help, supply a word or value as its
@@ -618,6 +730,23 @@ argument:
 	help copy
 	help system
 	help system/console
+
+To view all words that match a pattern use a
+string or partial word and optional * wildcard:
+
+	help "for"
+	help for*
+	help any-
+
+To see words with values of a specific datatype:
+
+	help real!
+	help datatype!
+
+Word completion:
+
+	Use <tab> at the command line for word completion.
+	Press <tab> twice to see choices.
 
 Other useful functions:
 
@@ -631,23 +760,17 @@ More information: http://www.world-lang.org
 }
 		exit
 	]
-    if all [word? :word false = value? :word] [
-        print ["No information on" mold :word]
-        exit
-	]
-	comment {
-    if any [string? :word all [word? :word datatype? get :word]] [
+    if all [word! = type? :word not value? :word] [word: mold :word] 
+    if any [string! = type? :word all [word! = type? :word datatype! = type? get :word]] [
         types: dump-obj/match system/words :word
-        ;types: dump-obj system/words :word
         sort types
-        if not empty? types [
+        if 0 < length? types [
             print ["Found these words:" newline types]
             exit
         ]
         print ["No information on" word "(word has no value)"]
         exit
     ]
-	}
 	if all [word! <> type? :word path! <> type? :word] [
 		prin [mold :word "is "]
 		print either find "aeiou" first mold type? :word [
@@ -1345,6 +1468,7 @@ level: 0
 
 bparse: make function! [[
 	"Parse a block according to rules."
+	[retain]
 	input [block!] "Input block to parse"
 	rules [block!] "Rules to parse by"
 	/case "Use case-sensitive comparison"
@@ -1587,7 +1711,7 @@ bparse: make function! [[
 				input: get/at token rules
 			]
 			set-word! [
-				set/local/at token input rules
+				set/local/at token copy/shallow input rules
 			]
 			word! [
 				switch token [
@@ -1725,7 +1849,6 @@ bparse: make function! [[
 					]
 					status: switch keyword keyword-rules
 					if mark [
-						;if mark <> input
 						if mark =? input = false [
 							set/local/at var copy/part mark input rules
 						]
@@ -1750,7 +1873,6 @@ bparse: make function! [[
 					]
 				]
 				if mark [
-					;if mark <> input
 					if mark =? input = false [
 						set/local/at var copy/part mark input rules
 					]
@@ -2172,7 +2294,7 @@ sparse: make function! [[
 						]
 					]
 					set-word! [
-						set/local/at token input rules
+						set/local/at token copy/shallow input rules
 					]
 					get-word! [
 						input: get/at token rules
@@ -2271,7 +2393,6 @@ sparse: make function! [[
 									]
 								]
 								mark: copy/shallow input
-								;mark: retain copy/shallow input
 								status: true
 							]
 						][
@@ -2293,12 +2414,10 @@ sparse: make function! [[
 							]
 							status: switch keyword keyword-rules
 							if mark [
-								;if mark <> input
 								;if not same? mark input
 								if mark =? input = false [
 									set/local/at var copy/part mark input rules
 								]
-								;free mark
 								mark: none
 							]
 						]
@@ -2324,11 +2443,9 @@ sparse: make function! [[
 							]
 						]
 						if mark [
-							;if mark <> input
 							if mark =? input = false [
 								set/local/at var copy/part mark input rules
 							]
-							;free mark
 							mark: none
 						]
 					]
@@ -2391,7 +2508,7 @@ set 'parse make function! [[
 				bparse copy/shallow input rules
 			]
 		]
-		string! binary! file! url! tag! issue! KWATZ! [
+		string! binary! file! email! url! tag! issue! KWATZ! [
 			insert istack to string! input
 			either all [
 				either case [
@@ -2444,8 +2561,282 @@ bitset: make function! [[
 ]]
 
 ; Strings
+debase: make function! [[
+	"Convert a string from a different base representation to binary."
+	[retain]
+	value [any-string!] "String to convert"
+	/base "Allow a different base for conversion"
+	base-value [integer!] "Base to convert from: 64, 16, or 2"
+	/local result ptr c hi lo chars valid-chars
+][
+	if base [
+		either base-value = 16 [
+			chars: "0123456789ABCDEFabcdef"
+			valid-chars: make bitset! chars
+			result: make binary! 0.5 * length? value
+			ptr: copy/shallow value
+			while [0 < length? ptr] [
+				c: ptr/1
+				while [not find valid-chars c] [
+					if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+						return none
+					]
+					next' ptr
+					if 0 = length? ptr [
+						return either 0 < length? result result none
+					]
+					c: ptr/1
+				]
+				hi: index? find chars c
+				if hi > 16 [hi: hi - 6]
+				hi: shift hi - 1 4
+				next' ptr
+				if 0 = length? ptr [
+					return none
+				]
+				c: ptr/1
+				while [not find valid-chars c] [
+					if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+						return none
+					]
+					next' ptr
+					if 0 = length? ptr [
+						return none
+					]
+					c: ptr/1
+				]
+				lo: index? find chars c
+				if lo > 16 [lo: lo - 6]
+				append result to char! hi + lo - 1
+				next' ptr
+			]
+			return result
+		][
+			either base-value = 2 [
+				valid-chars: make bitset! "01"
+				result: make binary! 0.125 * length? value
+				ptr: copy/shallow value
+				while [0 < length? ptr] [
+					c: ptr/1
+					while [not find valid-chars c] [
+						if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+							return none
+						]
+						next' ptr
+						if 0 = length? ptr [
+							return either 0 < length? result result none
+						]
+						c: ptr/1
+					]
+					hi: #"^@"
+					lo: 7
+					while [lo > 0] [
+						hi: hi + shift c - #"0" lo
+						next' ptr
+						if 0 = length? ptr [
+							return none
+						]
+						c: ptr/1
+						while [not find valid-chars c] [
+							if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+								return none
+							]
+							next' ptr
+							if 0 = length? ptr [
+								return none
+							]
+							c: ptr/1
+						]
+						lo: lo - 1
+					]
+					hi: c - #"0" + hi
+					append result hi
+					next' ptr
+				]
+				return result
+			][
+				if base-value <> 64 [
+					return none
+				]
+			]
+		]
+	]
+	chars: {ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=}
+	valid-chars: make bitset! chars
+	result: make binary! 0.75 * length? value
+	ptr: copy/shallow value
+	while [0 < length? ptr] [
+		c: ptr/1
+		while [not find valid-chars c] [
+			if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+				return none
+			]
+			next' ptr
+			if 0 = length? ptr [
+				return either 0 < length? result result none
+			]
+			c: ptr/1
+		]
+		if c = #"=" [
+			return none
+		]
+		hi: to char! shift -1 + index? find chars c 2
+		next' ptr
+		if 0 = length? ptr [
+			return none
+		]
+		c: ptr/1
+		while [not find valid-chars c] [
+			if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+				return none
+			]
+			next' ptr
+			if 0 = length? ptr [
+				return none
+			]
+			c: ptr/1
+		]
+		if c = #"=" [
+			return none
+		]
+		lo: #"^(FF)" + index? find chars c
+		append result hi + shift lo -4
+		hi: shift lo 4
+		next' ptr
+		if 0 = length? ptr [
+			return none
+		]
+		c: ptr/1
+		while [not find valid-chars c] [
+			if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+				return none
+			]
+			next' ptr
+			if 0 = length? ptr [
+				return none
+			]
+			c: ptr/1
+		]
+		either c = #"=" [
+			next' ptr
+			if 0 = length? ptr [
+				return none
+			]
+			c: ptr/1
+			while [not find valid-chars c] [
+				if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+					return none
+				]
+				next' ptr
+				if 0 = length? ptr [
+					return none
+				]
+				c: ptr/1
+			]
+			either c = #"=" [
+				return result
+			][
+				return none
+			]
+		][
+			lo: #"^(FF)" + index? find chars c
+			append result hi + shift lo -2
+			hi: shift lo 6
+		]
+		next' ptr
+		if 0 = length? ptr [
+			return none
+		]
+		c: ptr/1
+		while [not find valid-chars c] [
+			if c <> #" " and (c <> #"^-") and (c <> #"^/") [
+				return none
+			]
+			next' ptr
+			if 0 = length? ptr [
+				return none
+			]
+			c: ptr/1
+		]
+		either c = #"=" [
+			return result
+		][
+			lo: #"^(FF)" + index? find chars c
+			append result hi + lo
+		]
+		next' ptr
+	]
+	result
+]]
+dehex: make function! [[
+	"Convert URL-style hex encoded (%xx) strings."
+	[retain]
+	value [any-string!] "The string to dehex"
+	/local result c
+][	; Optimized for speed
+	result: to string! value
+	while [0 < length? result] [
+		if result/1 = #"%" [
+			either result/2 >= #"0" and (result/2 <= #"9") [
+				c: result/2 - #"0" * 16
+				either result/3 >= #"0" and (result/3 <= #"9") [
+					c: result/3 - #"0" + c
+					insert remove/part result 3 c
+				][
+					either #"A" <= result/3 and (#"F" >= result/3) [
+						c: result/3 - #"A" + 10 + c
+						insert remove/part result 3 c
+					][
+						if #"a" <= result/3 and (#"f" >= result/3) [
+							c: result/3 - #"a" + 10 + c
+							insert remove/part result 3 c
+						]
+					]
+				]
+			][
+				either #"A" <= result/2 and (#"F" >= result/2) [
+					c: result/2 - #"A" + 10 * 16
+					either result/3 >= #"0" and (result/3 <= #"9") [
+						c: result/3 - #"0" + c
+						insert remove/part result 3 c
+					][
+						either #"A" <= result/3 and (#"F" >= result/3) [
+							c: result/3 - #"A" + 10 + c
+							insert remove/part result 3 c
+						][
+							if #"a" <= result/3 and (#"f" >= result/3) [
+								c: result/3 - #"a" + 10 + c
+								insert remove/part result 3 c
+							]
+						]
+					]
+				][
+					if #"a" <= result/2 and (#"f" >= result/2) [
+						c: result/2 - #"a" + 10 * 16
+						either result/3 >= #"0" and (result/3 <= #"9") [
+							c: result/3 - #"0" + c
+							insert remove/part result 3 c
+						][
+							either #"A" <= result/3 and (#"F" >= result/3) [
+								c: result/3 - #"A" + 10 + c
+								insert remove/part result 3 c
+							][
+								if #"a" <= result/3 and (#"f" >= result/3) [
+									c: result/3 - #"a" + 10 + c
+									insert remove/part result 3 c
+								]
+							]
+						]
+					]
+				]
+			]
+		]
+		next' result
+	]
+	head' result
+]]
 detab: make function! [[
-	"Converts tabs in a string to spaces. (tab size 4)"
+	"Convert tabs in a string to spaces. (tab size 4)"
 	[retain]
 	string [any-string!]
 	/size "Specify number of spaces per tab"
@@ -2465,6 +2856,71 @@ detab: make function! [[
 		append out string
 	]
 	out
+]]
+enbase: make function! [[
+	"Convert a string to a different base representation."
+	[retain]
+	value [any-string!] "String to encode"
+	/base "Allow a different base for conversion"
+	base-value [integer!] "Base to convert to: 64, 16, or 2"
+	/local result ptr c d base64
+][
+	if base [
+		either base-value = 16 [
+			result: mold to binary! value
+			remove back' tail' result
+			return skip' head' result 2
+		][
+			either base-value = 2 [
+				result: copy ""
+				ptr: copy/shallow value
+				while [0 < length? ptr] [
+					c: ptr/1
+					append result either 128 and c = 128 ["1"] ["0"]
+					append result either 64 and c = 64 ["1"] ["0"]
+					append result either 32 and c = 32 ["1"] ["0"]
+					append result either 16 and c = 16 ["1"] ["0"]
+					append result either 8 and c = 8 ["1"] ["0"]
+					append result either 4 and c = 4 ["1"] ["0"]
+					append result either 2 and c = 2 ["1"] ["0"]
+					append result either 1 and c = 1 ["1"] ["0"]
+					next' ptr
+				]
+				return result
+			][
+				if base-value <> 64 [
+					return none
+				]
+			]
+		]
+	]
+	base64: {ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/}
+	result: copy ""
+	ptr: copy/shallow value
+	while [0 < length? ptr] [
+		;c: to integer! ptr/1
+		c: ptr/1
+		append result pick base64 1 + shift c -2
+		either 3 <= length? ptr [
+			d: to integer! ptr/2
+			append result pick base64 1 + ((shift c and 3 4) or shift d -4)
+			c: to integer! ptr/3
+			append result pick base64 1 + ((shift d and 15 2) or shift c -6)
+			append result pick base64 1 + (c and 63)
+		][
+			either 2 <= length? ptr [
+				d: to integer! ptr/2
+				append result pick base64 1 + ((shift c and 3 4) or shift d -4)
+				append result pick base64 1 + shift d and 15 2
+			][
+				append result pick base64 1 + shift c and 3 4
+				append result "="
+			]
+			append result "="
+		]
+		skip' ptr 3
+	]
+	result
 ]]
 form: make function! [[
 	"Form a value into a string."
@@ -3168,6 +3624,7 @@ m: make function! [[][do %test/cmandelbrot.w]]
 test: make function! [[][do %test/test.w]]
 dt: make function! [[
 	"Time the execution of a block"
+	;[retain]
 	block [block! function! routine!]
 	/local t
 ][
