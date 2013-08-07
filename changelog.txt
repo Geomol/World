@@ -1,3 +1,26 @@
+7-Aug-2013
+----------
+- Added datatype: pair!
+- Added datatype: image! (premature, no real support)
+- Added datatype: email!
+- Added datatype: list!
+- Added HALT
+- Added DEHEX
+- Added char! support to SHIFT
+- Added ENBASE
+- Added DEBASE
+- Added series changing FIND'
+- Added /ONLY refinement to SEND
+- Added ACTOR construction function
+- Improved HELP with strings, datatypes, partial word and * wildcard
+- QUIT in tasks other than maintask now works as HALT
+- Changed block comparison, so this is false: [1] == [1.0]
+- Improved terminal output regarding newlines in blocks and parentheses
+- Fixed PARSE regarding (new) mem rules and SET
+- Added more tests
+- Other minor changes and additions
+
+
 17-Jul-2013
 -----------
 - Added better networking using cURL library, libcurl (OS X and Linux)

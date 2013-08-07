@@ -1,6 +1,9 @@
 ["cd" == find "abcd" "c"]
 [a: skip "abcd" 2 "cd" == find/any a "?"]
 ["cd" == find/match "abcd" "ab"]
+[[2] == find/match [1 2] 1]
+[[2] == find/match [1 2] [1]]
+[[2] == find/match [1 2] integer!]
 ["cd" == find/last "abcdabcd" "c"]
 [a: skip "abcd" 4 "cd" == find/reverse a "c"]
 ["cd" == find/any/last "abcdabcd" "c?"]
@@ -8,3 +11,6 @@
 [[2 3 4] = find [1 2 3 4] [2 3]]
 [none == find [1 [2 3] 4] [2 3]]
 [[[2 3] 4] == find/only [1 [2 3] 4] [2 3]]
+[(reduce [datatype!]) == find/last reduce [datatype!] datatype!]
+
+["cd" == find'/match "abcd" "ab"]

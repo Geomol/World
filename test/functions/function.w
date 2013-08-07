@@ -17,3 +17,7 @@
 	f: does [tail? []]
 	true = f
 ]
+;[
+	;f: func [v] [f v + 1]
+	;error? try [f 0]
+;]

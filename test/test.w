@@ -38,6 +38,7 @@ do-tests %datatypes/range.w
 do-tests %datatypes/binary.w
 do-tests %datatypes/tag.w
 do-tests %datatypes/time.w
+do-tests %datatypes/list.w
 do-tests %datatypes/routine.w
 do-tests %datatypes/port.w
 
