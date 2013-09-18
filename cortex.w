@@ -1,8 +1,11 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		7-Aug-2013
-	Version:	0.6.21
+	Date:		17-Sep-2013
+	Version:	0.6.22
 	History: [
+		0.6.22	[17-09-2013	JN	{Changed help to deal with datatypes in all cases
+								 Changed >> to use negate instead of unary minus
+								 Improved random}]
 		0.6.21	[07-08-2013	JN	{Added pair!
 								 Added pair?
 								 Added as-pair
@@ -765,9 +768,13 @@ More information: http://www.world-lang.org
         types: dump-obj/match system/words :word
         sort types
         if 0 < length? types [
-            print ["Found these words:" newline types]
-            exit
+            	print ["Found these words:" newline types]
+            	exit
         ]
+    	if all [word! = type? :word datatype! = type? get :word] [
+			print [mold :word "is a datatype!"]
+			exit
+		]
         print ["No information on" word "(word has no value)"]
         exit
     ]
@@ -1067,7 +1074,7 @@ xor': make function! [[
 	data [integer!]
 	bits [integer!] "Number of bits to shift"
 ][
-	shift data (- bits)
+	shift data negate bits
 ]]
 arccos: make function! [[
 	"Inverse trigonometric cosine in radians."
@@ -1145,24 +1152,34 @@ min: make function! [[
 	;pick reduce [value1 value2] value1 < value2
 	if :value1 < :value2 [return :value1] :value2
 ]]
-; TODO NB!! random is not final and will most likely become a native function
-rseed: 1
 random: make function! [[
 	"Random value of the same datatype."
 	[retain]
-	value [integer! real! percent! date!] "Maximum value of result"
+	value [integer! real! percent! date! time!] "Maximum value of result"
 	/seed "Restart or randomize"
-	/local Y to-do
+	/local action to-do
 ][
 	either seed [
-		rseed: to integer! value
+		action: select [
+			integer!	[value]
+			real!		[to integer! to binary! value]
+			date!		[to integer! to binary! to real! value]
+			time!		[to integer! to binary! to real! value]
+		] type?/word value
+		if action = none [
+			action: [to integer! to binary! to real! now/precise]
+		]
+		sys-utils/randomize do action
+		exit
 	][
-		rseed: 16807 * rseed // 2147483647
-		Y: rseed - 1 * 2147483646 + (16807 * rseed // 2147483647) / 4611686009837453313
 		to-do: find [
-			integer! [1 + to integer! Y * value]
-			real! [value * Y]
-			percent! [value * Y]
+			;integer!	[1 + to integer! value * abs sys-utils/genrand64-int64 / 8000000000000000h]
+			; 1.0842021724855043e-19 is close to 2 ** -63: to real! #{3BFF FFFF FFFF FFFF}
+			; It's a little lower to not get value + 1 as possible output.
+			integer!	[1 + to integer! value * abs sys-utils/genrand64-int64 * 1.0842021724855043e-19]
+			real!		[value * abs sys-utils/genrand64-int64 / 8000'0000'0000'0000h]
+			percent!	[value * abs sys-utils/genrand64-int64 / 8000'0000'0000'0000h]
+			datatype!	[to value to binary! sys-utils/genrand64-int64]
 		] type?/word value
 		either to-do [
 			do to-do/2
@@ -3375,6 +3392,8 @@ mold-series: make function! [[
 	output
 ]]
 
+
+; ---- print-last-error ----
 print-last-error: make function! [[
 	/local err id
 ][
@@ -3392,6 +3411,8 @@ print-last-error: make function! [[
 	print system/last-error/near
 ]]
 
+
+; ---- qsort ----
 qsort: make function! [[
 	[retain]
 	v [series!]
@@ -3433,6 +3454,60 @@ qsort: make function! [[
 	qsort v last + 1 right
 ]]
 
+
+; ---- Random ----
+; The array for the state vector
+mt: make block! 312
+append/dup mt 0 312
+;mti: 312 + 2
+mti: 313	; to trigger initiate
+
+; initializes mt with a seed
+randomize: make function! [[
+	seed	[integer!]
+][
+	mt/1: seed
+	mti: 2
+	while [mti <= 312] [
+		;mt/:mti: 6'364'136'223'846'793'005 * (mt/(mti - 1) xor shift/logical mt/(mti - 1) -62) + mti
+		mt/:mti: 6'364'136'223'846'793'005 * ((pick mt mti - 1) xor shift/logical pick mt mti - 1 -62) + mti - 1
+		mti: mti + 1
+	]
+]]
+; initialize
+randomize to integer! to binary! to real! now/precise
+
+; generates a random number on [0, 2^64-1]-interval
+genrand64-int64: make function! [[
+	/local i x mag01
+][
+	mag01: [0 0B502'6F5A'A966'19E9h]
+	if mti > 312 [	; generate 312 words at one time
+		i: 1
+		while [i <= 156] [
+			x: mt/:i and 0FFFF'FFFF'8000'0000h or ((pick mt i + 1) and 0000'0000'7FFF'FFFFh)
+			mt/:i: (pick mt i + 156) xor (shift/logical x -1) xor pick mag01 x and 1 + 1
+			i: i + 1
+		]
+		while [i < 312] [
+			x: mt/:i and 0FFFF'FFFF'8000'0000h or ((pick mt i + 1) and 0000'0000'7FFF'FFFFh)
+			mt/:i: (pick mt i - 156) xor (shift/logical x -1) xor pick mag01 x and 1 + 1
+			i: i + 1
+		]
+		x: mt/312 and 0FFFF'FFFF'8000'0000h or (mt/1 and 0000'0000'7FFF'FFFFh)
+		mt/312: mt/156 xor (shift/logical x -1) xor pick mag01 x and 1 + 1
+		mti: 1
+	]
+	x: mt/:mti
+	mti: mti + 1
+	x: (shift/logical x -29) and 5555'5555'5555'5555h xor x
+	x: (shift x 17) and 71D6'7FFF'EDA6'0000h xor x
+	x: (shift x 37) and 0FFF7'EEE0'0000'0000h xor x
+	x: x xor shift/logical x -43
+]]
+
+
+; ---- tab-completion ----
 strncmp: make function! [[
 	[retain]
 	cs	[any-string!]
@@ -3508,6 +3583,12 @@ tab-completion: make function! [[
 			foreach [word val] to block! system/words [
 				append values to string! word
 			]
+			;to block! system/words
+			;while [0 < length? words] [
+				;append values to string! words/1
+				;skip' words 2
+			;]
+			;append values to string! 'system
 		]
 	]
 	l: length? s
@@ -3543,8 +3624,12 @@ tab-completion: make function! [[
 						poke selected 1 mold pick selected 1
 					]
 				]
-				selected: sort selected
+	;print "check 1"
+				;selected: sort selected
+				sort selected
+	;print "check 2"
 				sys-utils/columnize selected
+	;print "check 3"
 				head' line
 				prin system/console/prompt
 				prin line

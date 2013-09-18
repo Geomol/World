@@ -1,8 +1,9 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		28-May-2013
-	Version:	0.0.26
+	Date:		10-Aug-2013
+	Version:	0.0.27
 	History: [
+		0.0.27	[10-8-2013	JN	{Added forskip}]
 		0.0.26	[28-5-2013	JN	{Moved last to cortex.w}]
 		0.0.25	[26-5-2013	JN	{Added fourth, fifth, ...}]
 		0.0.24	[26-5-2013	JN	{Changed many function defs to use func and pick
@@ -202,6 +203,23 @@ forever: make function! [[
 		;compile/at body 'forever
 	;]
     while [true] body
+]]
+forskip: make function! [[
+	"Evaluate a block for periodic values in a series."
+	[throw retain]
+	'word [word!] "Word set to each position in series"
+	skip-num [integer!] "Number of values to skip each time"
+	body [block!] "Block to evaluate each time"
+	/local l result
+][
+	if skip-num <= 0 [make error! reduce ['script 'invalid-arg mold skip-num]]
+	word: get/at word body
+	l: - length? word
+	while [any [0 < length? word (skip' word l false)]] [
+		result: do body
+		skip' word skip-num
+		result
+	]
 ]]
 function: make function! [[
     "Defines a user function with local words." 

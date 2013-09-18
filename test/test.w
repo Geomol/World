@@ -20,7 +20,8 @@ do-tests: make function! [[
 		if true <> do tests/1 [
 			print ["Failed:" mold tests/1]
 		]
-		next 'tests
+		;next 'tests
+		next' tests
 	]
 ]]
 

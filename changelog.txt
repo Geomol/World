@@ -1,3 +1,13 @@
+18-Sep-2013
+-----------
+
+- Added BREAK
+- Added support for hex syntax in integer input, e.g. 100h, which equals 256. Hex syntax ends with 'h', and if it starts with A-F or a-f, a prefix zero is required, e.g. 0FFh, which equals 255.
+- Updated RANDOM to be based on 64-bit Mersenne Twister
+- Added FORSKIP to rebol.w
+- Other minor additions and changes
+
+
 7-Aug-2013
 ----------
 - Added datatype: pair!
