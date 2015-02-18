@@ -25,10 +25,8 @@ w> help
 Known issues
 ------------
 
-- The memory handling system can't cope with cyclic references yet.
+- The memory handling system can't cope with cyclic references.
 
 - Operators don't support literals as their first argument, as functions do, and they don't take refinements.
 
 - Compiling paths with functions e.g. in contexts within contexts isn't finalized.
-
-- Reading a URL is not supported under Windows, as libcurl isn't included in that version.

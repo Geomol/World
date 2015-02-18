@@ -15,12 +15,13 @@ do-tests: make function! [[
 	file [file! string!]
 	/local tests a b f
 ][
-	tests: load file
+	;tests: load file
+	;tests: bind load file 'local
+	tests: to block! read file
 	while [0 < length? tests] [
 		if true <> do tests/1 [
-			print ["Failed:" mold tests/1]
+			print ["Failed:" mold tests/1 "^/^-in" file]
 		]
-		;next 'tests
 		next' tests
 	]
 ]]
@@ -70,4 +71,8 @@ do-tests %functions/system/now.w
 ;print "cortex"
 do-tests %cortex/cortex.w
 
+if value? 'c [	; c is used as extern context in e.g. %datatypes/path.w
+	free c
+	c: none
+]
 true

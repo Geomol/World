@@ -7,12 +7,9 @@
 #define file_h
 
 
+#include <stdlib.h>
 #include <unistd.h>
 
-
-#ifdef WORLD_OF_POSIX
-#define MAX_PATH 1024
-#endif
 
 #define FILE_TYPE_FILE	1
 #define FILE_TYPE_DIR	2
@@ -20,9 +17,9 @@
 
 typedef struct {
 	char		*path;
+	char		*resolved_name;
 	void		*handle;
 	long long	size;
-	//long long		index;
 	time_t		time;
 	long		type;	/* 1 = file, 2 = dir */
 } WorldFile;
@@ -45,12 +42,9 @@ int		 close_file (int fd);
 int64_t	 file_length (char *file, int binary);
 size_t	 fread_file (char *target, char *file, int binary);
 size_t	 fwrite_file (char *file, char *value, int length, int binary);
-char	*to_local_file (char *file);
+char	*to_local_file (char *file);	/* Used by host/win32/file.c */
 char	*to_world_file (char *file);
-char	*what_dir ();
 char	*get_pwd ();
-char	*get_exec_path ();
-//void	 f_free_dir (char *dir);
 int		 change_dir (const char *path);
 
 #endif

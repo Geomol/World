@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,29 +15,55 @@
 
 #include "file.h"
 
-/*
-#ifdef WORLD_OF_MACOSX
-	#include <mach-o/dyld.h>
-	typedef int (*NSGetExecutablePathProcPtr) (char *buf, size_t *bufsize);
-#endif
-*/
 
-
-/*
-int f_gets (char *output, int max, FILE *input) {
-	fgets (output, max, input);
-	if (ferror (input)) return errno;
-	return 0;
-}
-*/
-
-
-char path_buf[MAX_PATH];
+/* TODO Is this a problem with tasks? */
+char path_buf[PATH_MAX];
+char resolved_name[PATH_MAX];
 
 
 int get_file_info (WorldFile *wfile) {
 	struct stat stbuf;
-	if (stat (wfile->path, &stbuf) == -1)
+	struct passwd *pw;
+	char *ptr;
+	/* TODO if strlen (wfile->path) > PATH_MAX) error ! */
+	if ('~' == wfile->path[0]) {
+		switch (wfile->path[1]) {
+			case '\0':
+			case '/':
+				if (NULL == (ptr = getenv ("HOME")))
+					strcpy (path_buf, wfile->path);
+				else {
+					strcpy (path_buf, ptr);
+					strcat (path_buf, &wfile->path[1]);
+				}
+				break;
+			default:
+				strcpy (path_buf, &wfile->path[1]);
+				if (NULL == (ptr = strchr (path_buf, '/'))) {
+					if (NULL == (pw = getpwnam (path_buf)))
+						strcpy (path_buf, wfile->path);
+					else
+						strcpy (path_buf, pw->pw_dir);
+				} else {
+					*ptr = '\0';
+					int l = strlen (path_buf);
+					if (NULL == (pw = getpwnam (path_buf)))
+						strcpy (path_buf, wfile->path);
+					else {
+						strcpy (path_buf, pw->pw_dir);
+						strcat (path_buf, &wfile->path[l + 1]);
+					}
+				}
+				break;
+		}
+		if (NULL == realpath (path_buf, resolved_name))
+			return -1;
+	} else {
+		if (NULL == realpath (wfile->path, resolved_name))
+			return -1;
+	}
+	wfile->resolved_name = resolved_name;
+	if (stat (wfile->resolved_name, &stbuf) == -1)
 		return -1;
 	if (S_ISDIR (stbuf.st_mode)) {
 		wfile->type = FILE_TYPE_DIR;
@@ -50,7 +78,7 @@ int get_file_info (WorldFile *wfile) {
 
 
 int open_dir (WorldFile *wfile) {
-	if ((wfile->handle = opendir (wfile->path)) == NULL)
+	if ((wfile->handle = opendir (wfile->resolved_name)) == NULL)
 		return -1;
 	return 0;
 }
@@ -67,7 +95,7 @@ int read_dir (WorldFile *wfile) {
 		}
 		cp = dp->d_name;
 	} while (cp[0] == '.' && (cp[1] == 0 || cp[1] == '.'));
-	strncpy (path_buf, cp, MAX_PATH - 2);
+	strncpy (path_buf, cp, PATH_MAX - 2);
 	if (dp->d_type == DT_DIR)
 		strcat (path_buf, "/");
 	wfile->path = path_buf;
@@ -98,7 +126,6 @@ int64_t file_length (char *file, int binary) {
 size_t fread_file (char *target, char *file, int binary) {
 	FILE *fp = binary ? fopen (file, "rb") : fopen (file, "r");
 	if (fp == NULL) return -1;
-	//size_t size = fread (target, file_length (file), 1, fp);
 	fseek (fp, 0L, SEEK_END);
 	int length = ftell (fp);
 	fseek (fp, 0L, SEEK_SET);
@@ -117,11 +144,6 @@ size_t fwrite_file (char *file, char *value, int length, int binary) {
 }
 
 
-//char *to_local_file (char *file) {
-	//return file;
-//}
-
-
 char *to_world_file (char *file) {
 	if (file[1] == ':') {
 		file[1] = file[0];
@@ -134,51 +156,11 @@ char *to_world_file (char *file) {
 }
 
 
-char *what_dir () {
-	char *dir = getcwd (NULL, 0);
-	int length = strlen (dir);
-	char *what = malloc (length + 2);
-	memcpy (what, dir, length);
-	free (dir);
-	what[length] = '/';
-	what[length + 1] = '\0';
-	return what;
-}
-
-
 char dir[256];
 
 char *get_pwd () {
-	//return getcwd (NULL, 0);
 	return getcwd (dir, 255);
 }
-
-
-/*
-#ifdef WORLD_OF_MACOSX
-char path[1024];
-char *get_exec_path () {
-	size_t pathLength = 1023;
-	static NSGetExecutablePathProcPtr NSGetExecutablePath = NULL;
-	if (NSGetExecutablePath == NULL) {
-		NSGetExecutablePath = (NSGetExecutablePathProcPtr)
-			NSAddressOfSymbol(NSLookupAndBindSymbol("__NSGetExecutablePath"));
-	}
-	if (NSGetExecutablePath != NULL) {
-		(*NSGetExecutablePath) (path, &pathLength);
-		path[1023] = 0;
-	}
-	return path;
-}
-#endif
-*/
-
-
-/*
-void f_free_dir (char *dir) {
-	free (dir);
-}
-*/
 
 
 int change_dir (const char *path) {

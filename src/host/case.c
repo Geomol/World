@@ -4,8 +4,6 @@
  */
 
 
-#include <ctype.h>
-
 #include "case.h"
 
 
@@ -22,6 +20,16 @@ int w_strncmp (char *cs, char *ct, int n) {
 	for (i = 0; i < n; i++) {
 		if (tolower ((int) cs[i]) != tolower ((int) ct[i]))
 			return tolower ((int) ct[i]) - tolower ((int) cs[i]);
+	}
+	return 0;
+}
+
+
+int wordcmp (char *cs, char *ct, int n) {
+	int i;
+	for (i = 0; i < n; i++) {
+		if (tolower ((int) cs[i]) != (int) ct[i])
+			return (int) ct[i] - tolower ((int) cs[i]);
 	}
 	return 0;
 }

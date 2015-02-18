@@ -4,7 +4,11 @@
  */
 
 #include <curl/curl.h>
+#ifdef W_POSIX
 #include <sys/select.h>
+#else
+#include <winsock2.h>
+#endif
 
 #include "netcurl.h"
 
@@ -146,20 +150,8 @@ int netcurl_wait_io (int id, long *usec) {
 
 	/* Timeout */
 	struct timeval timeout;
-	//timeout.tv_sec = 1;
 	timeout.tv_sec = 0;		/* Doing a poll */
 	timeout.tv_usec = 0;
-	/*
-	long usec = -1;
-	curl_multi_timeout (multihandle, &usec);
-	if (usec >= 0) {
-		timeout.tv_sec = usec / 1000;
-		if (timeout.tv_sec > 1)
-			timeout.tv_sec = 1;
-		else
-			timeout.tv_usec = (usec % 1000) * 1000;
-	}
-	*/
 	/* Set FD sets and select () */
 	curl_multi_fdset (multihandle, &read_set, &write_set, &exc_set, &max_fd);
 	int r = select (max_fd + 1, &read_set, &write_set, &exc_set, &timeout);
@@ -167,7 +159,9 @@ int netcurl_wait_io (int id, long *usec) {
 	switch (r) {
 		case -1:
 			/* select error */
+/*
 			puts ("**** select error in netcurl.c ****");
+*/
 			break;
 		case 0:	/* timeout */
 			//return W_IO_TIMEOUT;

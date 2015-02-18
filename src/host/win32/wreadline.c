@@ -35,72 +35,12 @@ void free_history () {
 }
 
 
-//int test_input () {
-/*
-	int c = getc (stdin);
-	ungetc (c, stdin);
-	return (c != EOF);
-*/
-/*
-	fseek (stdin, 0L, SEEK_END);
-	int64_t length = ftello (stdin);
-	return 
-}
-*/
-
-
-/*
-int test_input () {
-	//int timeout = 10; // wait 10ms
-	struct pollfd fd;
-	fd.fd		= fileno (stdin);
-	fd.events	= POLLIN;
-	fd.revents	= 0;
-	//int ret = poll (&fd, 1, timeout);
-	int ret = poll (&fd, 1, 0);
-	//if ((ret > 0) && (fd.revents & POLLIN))
-	if (ret > 0) {
-		//puts ("got data");
-		return ret;
-	// got some data
-	} else {
-		//puts ("got nothing");
-		return 0;
-	// check for error
-	}
-}
-*/
-
-
-/*
-static int kbhit() {
-	struct timeval timeout;
-	fd_set fds;
-	timeout.tv_sec	= 0;
-	timeout.tv_usec	= 10;
-	FD_ZERO(&fds);
-	int stdin_fileno = fileno (stdin);
-	FD_SET (stdin_fileno, &fds);
-	select (1, &fds, NULL, NULL, &timeout);
-	// return 0 if STDIN is not ready to be read.
-	return FD_ISSET (stdin_fileno, &fds);
-}
-*/
-
-
 /* w_readline */
 #define KEY_BS		8
 #define KEY_TAB		9
 #define KEY_CR		13
 #define KEY_ESC		27
 #define KEY_224		224
-/*
-#define KEY_UP		'H'
-#define KEY_DOWN	'P'
-#define KEY_RIGHT	'M'
-#define KEY_LEFT	'K'
-#define KEY_DEL		'S'
-*/
 
 
 enum {
@@ -134,7 +74,6 @@ static void insert_char (int ch) {
 	for (i=line_tail; i>pos; i--) line[i] = line[i-1];
 	line[pos++] = ch;
 	fputs (&line[pos - 1], stdout);
-	//if (pos < line_tail) printf ("\x1b[%dD", line_tail - pos);
 	if (pos < line_tail) {
 		i = line_tail - pos;
 		while (i--) putchar ('\b');
@@ -155,10 +94,7 @@ int check_input (int *auto_brackets, int *attempt, int allow_tab) {
 	int i, ch;
 	fflush (stdout);
 reentry:
-	//if (test_input ())
 	if (kbhit ()) {
-		//char li[256];
-		//fgets (li, 254, stdin);
 		ch = getch ();
 		if (ch == EOF)
 			return W_NO_INPUT;
@@ -195,8 +131,6 @@ reentry:
 					if (history[h_pos] == NULL || h_pos == h_tail) {
 						h_pos == 99 ? h_pos = 0 : h_pos++;
 					} else {
-						//if (pos > 0) printf ("\x1b[%dD", pos);
-						//printf ("\x1b[K");
 						while (pos--) putchar ('\b');
 						for (pos = 0; pos < line_tail; pos++) putchar (' ');
 						while (pos--) putchar ('\b');
@@ -215,8 +149,6 @@ reentry:
 				if (state == HAS_KEY_224) {		// KEY_DOWN
 					if (history[h_pos] != NULL && h_pos != h_tail) {
 						h_pos == 99 ? h_pos = 0 : h_pos++;
-						//if (pos > 0) printf ("\x1b[%dD", pos);
-						//printf ("\x1b[K");
 						while (pos--) putchar ('\b');
 						for (pos = 0; pos < line_tail; pos++) putchar (' ');
 						while (pos--) putchar ('\b');
@@ -309,7 +241,6 @@ reentry:
 						line[pos]	= '\"';
 						fputs (&line[pos - 1], stdout);
 						if (pos < line_tail) {
-							//printf ("\x1b[%dD", line_tail - pos);
 							i = line_tail - pos;
 							while (i--) putchar ('\b');
 						}
@@ -478,14 +409,12 @@ reentry:
 							|| (line[pos] == '[' && line[pos + 1] == ']')
 							|| (line[pos] == '{' && line[pos + 1] == '}')) {
 						for (i = pos; i < line_tail - 1; i++) line[i] = line[i+2];
-						//printf ("\b%s  \x1b[%dD", &line[pos], line_tail - pos);
 						printf ("\b%s  ", &line[pos]);
 						i = line_tail - pos;
 						while (i--) putchar ('\b');
 						line_tail--;
 					} else {
 						for (i = pos; i < line_tail; i++) line[i] = line[i+1];
-						//printf ("\b%s \x1b[%dD", &line[pos], line_tail - pos);
 						printf ("\b%s ", &line[pos]);
 						i = line_tail - pos;
 						while (i--) putchar ('\b');
@@ -532,7 +461,6 @@ void meet_tab_completion (char *result, int l) {
 		for (i = line_tail; i > pos; i--) line[i] = line[i-1];
 		line[pos] = result[j];
 		fputs (&line[pos++], stdout);
-		//if (pos < line_tail) printf ("\x1b[%dD", line_tail - pos);
 		if (pos < line_tail) {
 			i = line_tail - pos;
 			while (i--) putchar ('\b');

@@ -3,3 +3,5 @@
 [true == parse "<a>" [<A>]]
 [false == parse/case "<a>" [<A>]]
 [true == parse "ab" ["a" ["b"]]]
+[parse "abc" [copy a 2 skip] a == "ab"]
+[parse [a b c] [copy a 2 skip] a == [a b]]

@@ -1,6 +1,70 @@
 World [
-	Title:	"Shell"
+	Title:	"New Shell based on LIBC"
 	Author:	"John Niclasen"
+	Purpose: {
+		Implement following shell commands:
+			cat, cd, co, di, echo, grep, hd, l, ls, more, pwd
+	}
+]
+
+
+;
+; LIBC routines
+;
+
+libc: load/library any [
+	if system/version/platform = 'MacOSX [%/usr/lib/libc.dylib]
+	if system/version/platform = 'Linux [
+		either system/version/variation/3 = 2 [
+			%/lib/x86_64-linux-gnu/libc.so.6
+		][
+			%/lib/i386-linux-gnu/libc.so.6
+		]
+	]
+	if system/version/platform = 'Windows [%msvcrt.dll]
+]
+
+
+either system/version/platform = 'Windows [
+getcwd: make routine! [
+	"Get current working directory."
+	[typecheck]
+	libc "_getcwd" [
+		buffer [string!] pointer
+		size [integer!] uint64
+	]
+	pointer string!
+]
+
+
+chdir: make routine! [
+	"Change working directory"
+	[typecheck]
+	libc "_chdir" [
+		filename [string!] pointer
+	]
+	sint integer!
+]
+][
+getcwd: make routine! [
+	"Get current working directory."
+	[typecheck]
+	libc "getcwd" [
+		buffer [string!] pointer
+		size [integer!] uint64
+	]
+	pointer string!
+]
+
+
+chdir: make routine! [
+	"Change working directory"
+	[typecheck]
+	libc "chdir" [
+		filename [string!] pointer
+	]
+	sint integer!
+]
 ]
 
 
@@ -183,6 +247,7 @@ split-path: make function! [[
 ][
 	either find [%/ %. %./ %.. %../] target [
 		dir: dirize target
+		pos: none
 	][
 		either pos: find/last target "/" [
 			either 1 = length? pos [
@@ -249,11 +314,11 @@ cd: make function! [[
 	'dir "New directory path"
 	/local mark
 ][
-	; TODO relative dir
 	either value? 'dir [
 		dir: dirize to file! either refinement! = type? dir [mold dir] [dir]
 		if dir/1 <> #"/" [
-			insert dir system/script/path
+			;insert dir system/script/path
+			insert dir dirize to-world-file getcwd none 0
 		]
 		mark: find next dir #"/"
 		while [mark] [
@@ -273,12 +338,17 @@ cd: make function! [[
 		]
 		;skip 'dir (- -1 + index? dir)
 		head' dir
-		free system/script/path
-		system/script/path: dir
+		;free system/script/path
+		;system/script/path: dir
 	][
-		free system/script/path
-		system/script/path: copy system/options/path
+		;free system/script/path
+		;system/script/path: copy system/options/path
+		dir: copy system/options/path
 	]
+	;chdir to-local-file system/script/path
+	;system/script/path
+	chdir to-local-file dir
+	dir
 ]]
 
 
@@ -389,11 +459,80 @@ grep: make function! [[
 ]]
 
 
+hd: make function! [[
+	"Hexadecimal dump"
+	'file
+	/local list info buf i str
+][
+	if false = value? 'file [
+		make error! "hd is missing one or more arguments"
+	]
+	list: glob to file! either refinement! = type? file [mold file] [file]
+	if 1 = length? list [
+		if error? try [
+			query list/1
+		] [
+			print ["hd:" list/1 "-- no such file"]
+			exit
+		]
+	]
+	str: make string! 18
+	foreach file list [
+		info: query file
+		either info/type = 'dir [
+			print ["hd:" file "-- is a directory"]
+		][
+			buf: read file
+			if 0 < length? buf [
+				i: 0
+				while [not do [
+					clear str
+					append str #"|"
+					prin [copy/part skip mold to binary! i 10 8 ""]
+					while [not do [
+						prin ["" copy/part skip mold to binary! buf/1 2 2]
+						append str either buf/1 >= 32 and (buf/1 <= 126) [buf/1] [#"."]
+						next' buf
+						i: i + 1
+						(0 = length? buf) or (i // 8 = 0)
+					]] []
+					if 0 < length? buf [
+						prin " "
+						while [not do [
+							prin ["" copy/part skip mold to binary! buf/1 2 2]
+							append str either buf/1 >= 32 and (buf/1 <= 126) [buf/1] [#"."]
+							next' buf
+							i: i + 1
+							(0 = length? buf) or (i // 8 = 0)
+						]] []
+					]
+					either i // 16 = 0 [
+						prin "  "
+					][
+						loop 16 - (i // 16) [
+							prin "   "
+						]
+						prin "  "
+					]
+					append str #"|"
+					print str
+					;print ""
+					0 = length? buf
+				]] []
+				print [copy/part skip mold to binary! i 10 8 " "]
+			]
+		]
+	]
+	exit
+]]
+
+
 l: make function! [[
 	"List directory contents in long format."
 	[retain]
 	'dir-word [any-type!]
 	/a	"List all entries except for . and .."
+	/d	"Directories are listed as plain files (not searched recursively)"
 	/local print-file list dirs info max-name s
 ][
 	print-file: make function! [[
@@ -402,8 +541,12 @@ l: make function! [[
 	][
 		append/dup s " " max-name - ((length? s) // max-name)
 		info: query filename
-		loop 11 - length? to string! info/size [append s " "]
-		append s info/size
+		either info/type = 'dir [
+			append s "           "
+		][
+			loop 11 - length? to string! info/size [append s " "]
+			append s info/size
+		]
 		append s " "
 		if info/date/day < 10 [append s " "]
 		append s info/date/day
@@ -436,10 +579,15 @@ l: make function! [[
 	while [0 < length? list] [
 		info: query list/1
 		either info/type = 'dir [
-			append dirs dirize list/1
-			remove list
+			either d [
+				change list dirize list/1
+				next' list
+			][
+				append dirs dirize list/1
+				remove list
+			]
 		][
-			next 'list
+			next' list
 		]
 	]
 	;skip 'list (- -1 + index? list)
@@ -447,9 +595,9 @@ l: make function! [[
 	s: make string! 0
 	either (0 = length? list) and (1 = length? dirs) [
 		list: sort read dirs/1
-		if a = none [
+		if not a [
 			while [all [list/1 list/1/1 = #"."]] [
-				next 'list
+				next' list
 			]
 		]
 		max-name: 0
@@ -474,9 +622,9 @@ l: make function! [[
 		foreach dir dirs [
 			print [newline dir]
 			list: sort read dir
-			if a = none [
+			if not a [
 				while [all [list/1 list/1/1 = #"."]] [
-					next 'list
+					next' list
 				]
 			]
 			max-name: 0
@@ -498,6 +646,7 @@ ls: make function! [[
 	"List directory contents."
 	'dir-word [any-type!]
 	/a	"List all entries except for . and .."
+	/d	"Directories are listed as plain files (not searched recursively)"
 	/local list dirs info
 ][
 	;dir: throw-on-error
@@ -513,8 +662,13 @@ ls: make function! [[
 	while [0 < length? list] [
 		info: query list/1
 		either info/type = 'dir [
-			append dirs list/1
-			remove list
+			either d [
+				change list dirize list/1
+				next' list
+			][
+				append dirs dirize list/1
+				remove list
+			]
 		][
 			next 'list
 		]
@@ -523,7 +677,7 @@ ls: make function! [[
 	head' list
 	either (0 = length? list) and (1 = length? dirs) [
 		list: sort read dirs/1
-		if a = none [
+		if not a [
 			while [all [list/1 list/1/1 = #"."]] [
 				next 'list
 			]
@@ -534,7 +688,7 @@ ls: make function! [[
 		foreach dir dirs [
 			print [newline dir]
 			list: sort read dir
-			if a = none [
+			if not a [
 				while [all [list/1 list/1/1 = #"."]] [
 					next 'list
 				]
@@ -592,5 +746,24 @@ more: make function! [[
 pwd: make function! [[
 	"Return working directory name."
 ][
-	copy system/script/path
+	;copy system/script/path
+	dirize to-world-file getcwd none 0
+]]
+
+
+run: make function! [[
+	"Run a World script at its location"
+	value
+	/local d f r
+][
+	either file! = type? :value [
+		d: getcwd none 0
+		f: split-path value
+		chdir to-local-file f/1
+		r: do f/2
+		chdir d
+		r
+	][
+		do :value
+	]
 ]]

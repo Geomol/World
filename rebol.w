@@ -1,8 +1,9 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		10-Aug-2013
-	Version:	0.0.27
+	Date:		28-Oct-2014
+	Version:	0.0.28
 	History: [
+		0.0.28	[28-10-2014	JN	{Changed empty? to not be like tail?}]
 		0.0.27	[10-8-2013	JN	{Added forskip}]
 		0.0.26	[28-5-2013	JN	{Moved last to cortex.w}]
 		0.0.25	[26-5-2013	JN	{Added fourth, fifth, ...}]
@@ -450,7 +451,12 @@ append: make function! [[
 ]]
 }
 free :empty?
-empty?:	func pick :tail? 1 pick :tail? 2
+empty?: make function! [[
+	"True if a series is at its tail."
+	series [series!]
+][
+	0 >= length? series
+]]
 world_insert: :insert
 insert: make function! [[
 	"Inserts a value into a series and returns the series after the insert."

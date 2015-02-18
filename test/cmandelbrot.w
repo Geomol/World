@@ -20,6 +20,7 @@ iterate: func [
 	
 	;while [MAX_ITERATIONS >= next 'n] [
 	while [1000 >= next 'n] [
+	;for n 1 1000 1 [
 		z: z * z + c
 		;if BAILOUT < abs z [
 		if 4.0 < abs z [

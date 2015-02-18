@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
-#ifdef WORLD_OF_POSIX
+#ifdef W_POSIX
 #include <termios.h>
 #define LONGLONGD "%lld"
 #else
@@ -18,13 +18,13 @@
 #include "term.h"
 
 
-#ifdef WORLD_OF_POSIX
+#ifdef W_POSIX
 static struct termios old;
 #endif
 
 
 void set_raw () {
-#ifdef WORLD_OF_POSIX
+#ifdef W_POSIX
 	int stdin_fileno = fileno (stdin);
 	tcgetattr (stdin_fileno, &old);
 	struct termios trm;
@@ -39,7 +39,7 @@ void set_raw () {
 
 
 void reset_raw () {
-#ifdef WORLD_OF_POSIX
+#ifdef W_POSIX
 	tcsetattr (fileno (stdin), TCSAFLUSH, &old);
 #endif
 }
@@ -50,10 +50,9 @@ char last_char;
 
 void w_printf (char *fmt, ...) {
 	va_list ap;
-	char *p; //, *sval;
+	char *p;
 	int cval;
 	int64_t ival;
-	//double dval;
 	va_start (ap, fmt);
 	for (p = fmt; *p; p++) {
 		last_char = *p;

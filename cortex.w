@@ -1,12 +1,34 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		17-Sep-2013
-	Version:	0.6.22
+	Date:		13-Feb-2015
+	Version:	0.7.1
 	History: [
-		0.6.22	[17-09-2013	JN	{Changed help to deal with datatypes in all cases
+		0.7.1	[13-2-2015	JN	{Added as-range
+								 Added callback
+								 Added callback?}]
+		0.7.0	[6-2-2015	JN	{Added tau}]
+		0.6.31	[6-2-2015	JN	{Added typeset! to type-rules in bparse}]
+		0.6.30	[30-1-2015	JN	{Added to-local-file
+								 Added load}]
+		0.6.29	[17-1-2015	JN	{Added support for block within blocks to SAVE
+								 Added /lines refinement to SAVE
+								 Added support for block newlines to FORM
+								 Removed special treatment of integer! in FORM}]
+		0.6.28	[28-10-2014	JN	{Changed tail? to test on =, not >=}]
+		0.6.27	[22-6-2014	JN	{Added char! to random}]
+		0.6.26	[18-4-2014	JN	{Added node, node! and node?}]
+		0.6.25	[16-3-2014	JN	{Added support for rules like [copy var 2 skip] to parse
+								 Added binary recognition to string parsing
+								 Fixed string parsing when changing input
+								 Fixed FOREACH in case of just one value in data}]
+		0.6.24	[20-1-2014	JN	{Added support for block newlines to SAVE
+								 Added /skip refinement to SORT}]
+		0.6.23	[2-10-2013	JN	{Added vector!
+								 Added vector helper function}]
+		0.6.22	[17-9-2013	JN	{Changed help to deal with datatypes in all cases
 								 Changed >> to use negate instead of unary minus
 								 Improved random}]
-		0.6.21	[07-08-2013	JN	{Added pair!
+		0.6.21	[7-8-2013	JN	{Added pair!
 								 Added pair?
 								 Added as-pair
 								 Added image!
@@ -22,53 +44,53 @@ World [
 								 Added compose
 								 Fixed parse regarding new mem rules and SET
 								 Improved help}]
-		0.6.20	[10-07-2013	JN	{Changed input to not use trim}]
-		0.6.19	[02-07-2013	JN	{Added task-id! to any-type!
+		0.6.20	[10-7-2013	JN	{Changed input to not use trim}]
+		0.6.19	[2-7-2013	JN	{Added task-id! to any-type!
 								 Added task-id?}]
-		0.6.18	[19-06-2013	JN	{Added task! to any-function!
+		0.6.18	[19-6-2013	JN	{Added task! to any-function!
 								 Added support for task! to several functions}]
-		0.6.17	[07-06-2013	JN	{Added kill}]
-		0.6.16	[04-06-2013	JN	{Added task, task! and task?}]
-		0.6.15	[02-06-2013	JN	{Added bitset! and tuple! to any-type!}]
-		0.6.14	[31-05-2013	JN	{Changed form regarding integer!}]
-		0.6.13	[28-05-2013	JN	{Added last}]
-		0.6.12	[26-05-2013	JN	{Added of
+		0.6.17	[7-6-2013	JN	{Added kill}]
+		0.6.16	[4-6-2013	JN	{Added task, task! and task?}]
+		0.6.15	[2-6-2013	JN	{Added bitset! and tuple! to any-type!}]
+		0.6.14	[31-5-2013	JN	{Changed form regarding integer!}]
+		0.6.13	[28-5-2013	JN	{Added last}]
+		0.6.12	[26-5-2013	JN	{Added of
 								 Removed /deg from arccos, arcsin and arctan
 								 Added to-deg
 								 Changed include
 								 Remove time (was the same as dt)
 								 Added block rules to bitset
 								 Changed set/at to set/local/at in parsing}]
-		0.6.11	[24-05-2013	JN	{Made head and tail native
+		0.6.11	[24-5-2013	JN	{Made head and tail native
 								 Made negate, not and clear native
 								 Changed detab to not use parse
 								 Fixed foreach
 								 Changed forall
 								 Added deg}]
-		0.6.10	[14-05-2013	JN	{Moved last-error to system
+		0.6.10	[14-5-2013	JN	{Moved last-error to system
 								 Added detab}]
-		0.6.9	[12-05-2013	JN	{Changed source to also take function argument}]
-		0.6.8	[10-05-2013	JN	{Added input}]
-		0.6.7	[09-05-2013	JN	{Added retain to many functions
+		0.6.9	[12-5-2013	JN	{Changed source to also take function argument}]
+		0.6.8	[10-5-2013	JN	{Added input}]
+		0.6.7	[9-5-2013	JN	{Added retain to many functions
 								 Added /free and /retain to change}]
-		0.6.6	[04-05-2013	JN	{Added columnize to sys-utils
+		0.6.6	[4-5-2013	JN	{Added columnize to sys-utils
 								 Added tab-completion to sys-utils}]
-		0.6.5	[01-05-2013	JN	{Added forall}]
-		0.6.4	[29-04-2013	JN	{Changed input' to local in parse}]
-		0.6.3	[27-04-2013	JN	{Added free-all}]
-		0.6.2	[26-04-2013	JN	{Changed random to return percent!
+		0.6.5	[1-5-2013	JN	{Added forall}]
+		0.6.4	[29-4-2013	JN	{Changed input' to local in parse}]
+		0.6.3	[27-4-2013	JN	{Added free-all}]
+		0.6.2	[26-4-2013	JN	{Changed random to return percent!
 								 Fixed bug in form}]
-		0.6.1	[22-04-2013	JN	{Changed head and tail to support word! *** Doesn't work with contexts! ***
+		0.6.1	[22-4-2013	JN	{Changed head and tail to support word! *** Doesn't work with contexts! ***
 								 Changed help, becuase of new memory management}]
-		0.6.0	[09-04-2013	JN	{Changed q, because of new memory management}]
-		0.5.24	[21-02-2012	JN	{Added copy-series to sys-utils
+		0.6.0	[9-4-2013	JN	{Changed q, because of new memory management}]
+		0.5.24	[21-2-2012	JN	{Added copy-series to sys-utils
 								 Improved head
 								 Removed /local from head and tail}]
-		0.5.23	[20-02-2012	JN	{Added mold-series to sys-utils}]
-		0.5.22	[19-02-2012	JN	{Rewrote switch because of datatype! <-> word! coercion}]
-		0.5.21	[17-02-2012	JN	{Added none! check to empty?
+		0.5.23	[20-2-2012	JN	{Added mold-series to sys-utils}]
+		0.5.22	[19-2-2012	JN	{Rewrote switch because of datatype! <-> word! coercion}]
+		0.5.21	[17-2-2012	JN	{Added none! check to empty?
 								 Added more?}]
-		0.5.20	[16-02-2012	JN	{Removed append, as it's now native }]
+		0.5.20	[16-2-2012	JN	{Removed append, as it's now native }]
 		0.5.19	[22-12-2011	JN	{Added check on system/options/quiet}]
 		0.5.18	[22-12-2011	JN	{Removed ?? (binding rules)}]
 		0.5.17	[19-12-2011	JN	{Added "No information" to help}]
@@ -80,8 +102,8 @@ World [
 		0.5.13	[12-12-2011	JN	{Added type check to append}]
 		0.5.12	[11-12-2011	JN	{Added compile/reset to append}]
 		0.5.11	[10-12-2011	JN	{Added sys-utils}]
-		0.5.10	[05-12-2011	JN	{Added routine! to help}]
-		0.5.9	[02-12-2011	JN	{Added license
+		0.5.10	[5-12-2011	JN	{Added routine! to help}]
+		0.5.9	[2-12-2011	JN	{Added license
 								 Removed compile from loop
 								 Added min
 								 Added reverse
@@ -123,31 +145,31 @@ World [
 		0.4.0	[18-10-2011	JN	{Added native
 								 Added native-op
 								 Added operator}]
-		0.3.8	[03-10-2011	JN	{Added special attributes to help}]
-		0.3.7	[18-09-2011	JN	{Added time! to number argument in negate}]
-		0.3.6	[15-09-2011	JN	{Removed cos, sin and tan, as they're now natives
+		0.3.8	[3-10-2011	JN	{Added special attributes to help}]
+		0.3.7	[18-9-2011	JN	{Added time! to number argument in negate}]
+		0.3.6	[15-9-2011	JN	{Removed cos, sin and tan, as they're now natives
 								 Added arccos, arcsin and arctan}]
-		0.3.5	[14-09-2011	JN	{Added [throw] to some functions}]
-		0.3.4	[22-08-2011	JN	{Fixed bug in switch}]
-		0.3.3	[18-07-2011	JN	{Added on and off}]
-		0.3.2	[11-07-2011	JN	{Added vocal test to help
+		0.3.5	[14-9-2011	JN	{Added [throw] to some functions}]
+		0.3.4	[22-8-2011	JN	{Fixed bug in switch}]
+		0.3.3	[18-7-2011	JN	{Added on and off}]
+		0.3.2	[11-7-2011	JN	{Added vocal test to help
 								 Added switch}]
-		0.3.1	[04-06-2011	JN	{Added log
+		0.3.1	[4-6-2011	JN	{Added log
 								 Made comment native}]
-		0.3.0	[30-05-2011	JN	{Added descriptions
+		0.3.0	[30-5-2011	JN	{Added descriptions
 								 Moved none, true and false to state.c}]
-		0.2.0	[24-05-2011	JN	{Added help}]
-		0.1.3	[16-05-2011	JN	{Added math and series functions}]
-		0.1.2	[14-04-2010	JN	{Added mold to probe}]
-		0.1.1	[06-03-2010	JN	{Removed zero}]
-		0.1.0	[03-03-2010	JN	{Added func, does}]
-		0.0.7	[01-03-2010	JN	{Added !}]
-		0.0.6	[25-02-2010	JN	{Added probe}]
-		0.0.5	[22-02-2010	JN	{Added negate}]
-		0.0.4	[19-02-2010	JN	{Added sqrt}]
-		0.0.3	[18-02-2010	JN	{Removed true?. Added comment}]
-		0.0.2	[17-02-2010	JN	{Added none, not, zero, zero?, true?, exp}]
-		0.0.1	[16-02-2010	JN	{Created Added false, true, e, pi}]
+		0.2.0	[24-5-2011	JN	{Added help}]
+		0.1.3	[16-5-2011	JN	{Added math and series functions}]
+		0.1.2	[14-4-2010	JN	{Added mold to probe}]
+		0.1.1	[6-3-2010	JN	{Removed zero}]
+		0.1.0	[3-3-2010	JN	{Added func, does}]
+		0.0.7	[1-3-2010	JN	{Added !}]
+		0.0.6	[25-2-2010	JN	{Added probe}]
+		0.0.5	[22-2-2010	JN	{Added negate}]
+		0.0.4	[19-2-2010	JN	{Added sqrt}]
+		0.0.3	[18-2-2010	JN	{Removed true?. Added comment}]
+		0.0.2	[17-2-2010	JN	{Added none, not, zero, zero?, true?, exp}]
+		0.0.1	[16-2-2010	JN	{Created Added false, true, e, pi}]
 	]
 ]
 
@@ -166,12 +188,12 @@ off:	make logic!	0
 on:		make logic!	1
 
 any-block!:		make typeset! [block! paren! path! set-path! get-path! lit-path!]
-any-function!:	make typeset! [operator! function! routine! task!]
+any-function!:	make typeset! [operator! function! routine! callback! task!]
 any-object!:	make typeset! [context! error! port!]
 any-paren!:		make typeset! [paren!]
 any-path!:		make typeset! [path! set-path! get-path! lit-path!]
 any-string!:	make typeset! [string! binary! file! email! url! tag! issue!]
-any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! pair! range! time! date! string! binary! file! email! url! tag! issue! bitset! tuple! image! block! list! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! context! error! task! task-id! port! handle! struct! library! KWATZ!]
+any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! pair! range! time! date! string! binary! file! email! url! tag! issue! bitset! tuple! vector! image! block! list! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! callback! context! error! task! task-id! port! handle! struct! library! node! KWATZ!]
 any-word!:		make typeset! [word! set-word! get-word! lit-word! refinement!]
 number!:		make typeset! [integer! real! complex! percent!]
 scalar!:		make typeset! [integer! real! complex! percent! char! pair! range! tuple! time!]
@@ -190,6 +212,7 @@ system/schemes: make system/schemes [
 
 e:			2.718281828459045
 pi:			3.141592653589793
+tau:		6.283185307179586	; 2 * pi
 
 null:		#"^@"
 esc:		#"^["
@@ -270,6 +293,13 @@ context: make function! [[
 ][
 	make context! block
 ]]
+node: make function! [[
+	"Define a node"
+	[throw retain]	; TODO Thy is throw here?
+	block [block!] "Node variables and values"
+][
+	make node! block
+]]
 
 ; Control
 actor: make function! [[
@@ -284,6 +314,14 @@ actor: make function! [[
 			'while [true] body
 		] 2 false
 	]
+]]
+callback: make function! [[
+	"Define a callback function with given spec and body."
+	[retain]
+	spec [block!] {"Description" followed by arguments (opt type and string)}
+	body [block!] "The body block of the callback function"
+][
+	make callback! reduce [spec body]
 ]]
 compose: make function! [[
 	"Evaluate a block of expressions, only evaluate parens, and return a block."
@@ -359,6 +397,9 @@ for: make function! [[
 	body [block!] "Block to evaluate each time"
 	/local do-body
 ][
+	;if end == #"^(FF)" [
+		;make error! join "FOR - invalid argument: " end
+	;]
 	do-body: make function! reduce [reduce [[throw retain] word] body]
 	start: start - bump
 	either bump < 0 [
@@ -406,7 +447,7 @@ foreach: make function! [[
 			body': bind copy body c
 			l: length? word
 			set/local/at word data c
-			do body'
+			result: do body'
 			data': copy/shallow data
 			while [0 < length? skip' data' l] [
 				set/local/at word data' c
@@ -418,7 +459,7 @@ foreach: make function! [[
 			c: make context! bind c body
 			body': bind copy body c
 			set/local/at word data/1 c
-			do body'
+			result: do body'
 			data': copy/shallow data
 			while [0 < length? next' data'] [
 				set/local/at word data'/1 c
@@ -567,6 +608,13 @@ until: make function! [[
 	while [not result: do block] []
 	result
 ]]
+vector: make function! [[
+	"Define a vector."
+	[retain]
+	spec [block!] {Datatype and size}
+][
+	make vector! spec
+]]
 
 ; Datatype
 unset?:			make function! [["True for unset values." value][unset! = type? value]]
@@ -588,6 +636,7 @@ email?:			make function! [["True for email values." value][email! = type? :value
 url?:			make function! [["True for url values." value][url! = type? :value]]
 tag?:			make function! [["True for tag values." value][tag! = type? :value]]
 issue?:			make function! [["True for issue values." value][issue! = type? :value]]
+vector?:		make function! [["True for vector values." value][vector! = type? :value]]
 image?:			make function! [["True for image values." value][image! = type? :value]]
 block?:			make function! [["True for block values." value][block! = type? :value]]
 list?:			make function! [["True for list values." value][list! = type? :value]]
@@ -606,12 +655,14 @@ refinement?:	make function! [["True for refinement values." value][refinement! =
 operator?:		make function! [["True for operator values." value][operator! = type? :value]]
 function?:		make function! [["True for function values." value][function! = type? :value]]
 routine?:		make function! [["True for routine values." value][routine! = type? :value]]
+callback?:		make function! [["True for callback values." value][callback! = type? :value]]
 context?:		make function! [["True for context values." value][context! = type? :value]]
 error?:			make function! [["True for error values." value][error! = type? :value]]
 task?:			make function! [["True for task values." value][task! = type? :value]]
 task-id?:		make function! [["True for task-id values." value][task-id! = type? :value]]
 port?:			make function! [["True for port values." value][port! = type? :value]]
 library?:		make function! [["True for library values." value][library! = type? :value]]
+node?:			make function! [["True for node values." value][node! = type? :value]]
 KWATZ?:			make function! [["True for KWATZ values." value][KWATZ! = type? :value]]
 any-block?:		make function! [["True for any-block values." value][find any-block! type? :value]]
 any-function?:	make function! [["True for any-function values." value][find any-function! type? :value]]
@@ -633,13 +684,22 @@ as-pair: make function! [[
 	add 1x0 * x 0x1 * y
 ]]
 
+as-range: make function! [[
+	"Combine x and y values into a range."
+	x [integer! char!]
+	y [integer! char!]
+][
+	add 1-0 * x 0-1 * y
+]]
+
 ; Help
 probe: make function! [[
 	"Print a molded value and return that same value."
 	[retain]
 	value
 ][
-	print mold :value :value
+	print mold :value
+	:value
 ]]
 dump-obj: make function! [[
 	"Return a block of information about an object or port."
@@ -666,7 +726,7 @@ dump-obj: make function! [[
 		str
 	]]
 	form-val: make function! [[[retain] val] [
-		if any-block? :val [return form reduce ["length:" length? val]]
+		if any-block? :val [return form reduce ["length:" mold length? val]]
 		;if image? :val [return form reduce ["size:" val/size]]
 		;if datatype? :val [return get in spec-of val 'title]
 		if any-function? :val [
@@ -815,7 +875,7 @@ More information: http://www.world-lang.org
 	][
 		prin mold word
 		item: args/1
-		either find [function! task!] type?/word :value [
+		either find [function! callback! task!] type?/word :value [
 			while [item and ((:item <> /local) or (string! = type? args/2))] [
 				if (string! <> type? :item) and (block! <> type? :item) [
 					prin ["" mold :item]
@@ -844,6 +904,7 @@ More information: http://www.world-lang.org
 						next' item
 					]
 				]
+				head' item
 			]
 		]
 	]
@@ -927,7 +988,7 @@ More information: http://www.world-lang.org
 						][
 							print mold item/1
 						]
-						next' arg-no
+						next 'arg-no
 						skip' item 2
 					]
 				]
@@ -1122,7 +1183,7 @@ deg: make function! [[
 	"Convert degrees to radians."
 	value [number!]
 ][
-	value * 0.017453292519943296	; pi / 180
+	value * 0.017453292519943296	; tau / 360
 ]]
 exp: make function! [[
 	"Raise Euler's number e to the power."
@@ -1155,7 +1216,7 @@ min: make function! [[
 random: make function! [[
 	"Random value of the same datatype."
 	[retain]
-	value [integer! real! percent! date! time!] "Maximum value of result"
+	value [integer! real! percent! char! date! time! datatype!] "Maximum value of result"
 	/seed "Restart or randomize"
 	/local action to-do
 ][
@@ -1179,6 +1240,7 @@ random: make function! [[
 			integer!	[1 + to integer! value * abs sys-utils/genrand64-int64 * 1.0842021724855043e-19]
 			real!		[value * abs sys-utils/genrand64-int64 / 8000'0000'0000'0000h]
 			percent!	[value * abs sys-utils/genrand64-int64 / 8000'0000'0000'0000h]
+			char!		[#"^A" + to integer! (to integer! value) * abs sys-utils/genrand64-int64 * 1.0842021724855043e-19]
 			datatype!	[to value to binary! sys-utils/genrand64-int64]
 		] type?/word value
 		either to-do [
@@ -1225,7 +1287,7 @@ to-deg: make function! [[
 	"Convert radians to degrees."
 	value [number!]
 ][
-	value * 57.29577951308232	; 180 / pi
+	value * 57.29577951308232	; 360 / tau
 ]]
 zero?: make function! [[
 	"True if a number is zero."
@@ -1251,27 +1313,102 @@ input: make function! [[
 	insert clear system/console/prompt s
 	line
 ]]
+load: make function! [[
+	"Load a file or string. Bind block to global context."
+	[retain]
+	source	[file! string! url!]
+	/library "Force file to be a dynamic library"
+	/lines "Handle data as lines"
+	/all "Also load potential header"
+	/local data
+][
+	data: switch/default type? :source [
+		string!	[source]
+		file!	[
+			either library [
+				return load-library source
+			][
+				read source
+			]
+		]
+		url!	[read source]
+	] [
+		make error! reduce ['script 'invalid-arg mold :source]
+	]
+	either lines [
+		data: parse-utils/split-string data make bitset! "^/"
+		if empty? pick tail data -1 [
+			remove back tail data
+		]
+		forall data [
+			change/only data to block! data/1
+			set-newline data true
+		]
+		set-newline 'data true
+	][
+		data: to block! data
+	]
+	if not any [	; NOT ANY because of /all
+		'World <> pick data 1
+		block! <> type? pick data 2
+		all
+	] [
+		remove/part data 2
+	]
+	bind data 'system
+]]
 save: make function! [[
 	"Save to a file"
 	[retain]
 	where [file!] "Where to save it"
 	value "Value to save"
+	/lines "Handle block of data as lines"
 	/local s
 ][
 	either block! = type? :value [
 		value: copy/shallow value
 		s: clear ""
 		while [0 < length? value] [
-			append s value/1
-			append s #" "
+			append s either lines [
+				form value/1
+			][
+				mold value/1
+			]
 			next' value
+			append s either newline? value [
+				#"^/"
+			][
+				#" "
+			]
 		]
 		write where s
 	][
 		write where mold :value
 	]
 ]]
+to-local-file: make function! [[
+	"Convert a World file path to the local system file path."
+	path [file! string!]
+	/local p l
+][
+	p: to string! path
+	if system/version/platform = 'Windows [
+		if #"/" = pick p 1 [
+			poke p 1 pick p 2
+			poke p 2 #":"
+		]
+		l: length? p
+		while [0 < l] [
+			if #"/" = pick p l [
+				poke p l #"\"
+			]
+			l: l - 1
+		]
+	]
+	p
+]]
 to-world-file: make function! [[
+	"Convert a local system file path to a World file path."
 	path [string! file!]
 	/local p l
 ][
@@ -1380,8 +1517,17 @@ reverse: make function! [[
 sort: make function! [[
 	"Sort a series."
 	series [series!]
+	/skip "Treat the series as records of fixed size"
+	size [integer!] "Size of each record"
 ][
-	sys-utils/qsort series 1 length? series
+	either skip [
+		if (length? series) // size <> 0 [
+			make error! [script out-of-range]
+		]
+		sys-utils/qsort-size series 1 (length? series) / size size
+	][
+		sys-utils/qsort series 1 length? series
+	]
 	series
 ]]
 empty?: make function! [[
@@ -1389,7 +1535,7 @@ empty?: make function! [[
 	[retain]
 	series [series! none!]
 ][
-	if none! = type? series [return true]
+	if none! = type? series [return true]	; This is not in R2, but is in R3
 	0 = length? head series
 ]]
 more?: make function! [[
@@ -1403,7 +1549,7 @@ tail?: make function! [[
 	"True if a series is at its tail."
 	series [series!]
 ][
-	0 >= length? series
+	0 = length? series
 ]]
 change: make function! [[
 	"Change a value in a series."
@@ -1489,7 +1635,7 @@ bparse: make function! [[
 	input [block!] "Input block to parse"
 	rules [block!] "Rules to parse by"
 	/case "Use case-sensitive comparison"
-	/local keyword-rules type-rules ;get-token
+	/local keyword-rules type-rules
 	i j n keyword token var value dest status mark rules'
 ][
 	rules':	copy/shallow rules
@@ -1628,6 +1774,17 @@ bparse: make function! [[
 		datatype! [
 			either all [
 				find to typeset! token type? input/1
+				not tail? input
+			] [
+				next' input
+				true
+			][
+				false
+			]
+		]
+		typeset! [
+			either all [
+				find token type? input/1
 				not tail? input
 			] [
 				next' input
@@ -1830,6 +1987,12 @@ bparse: make function! [[
 					i: i - 1
 				]
 			]
+			if mark [
+				if mark =? input = false [
+					set/local/at var copy/part mark input rules
+				]
+				mark: none
+			]
 		][
 			either keyword [
 				switch/default keyword [
@@ -1962,7 +2125,7 @@ sparse: make function! [[
 	rules [block! string! none!] "Rules to parse by"
 	/all "Parse all chars including spaces"
 	/case "Use case-sensitive comparison"
-	/local keyword-rules type-rules ;get-token
+	/local keyword-rules type-rules
 	i j n keyword token var dest status mark
 	sp rules'
 ][
@@ -2281,6 +2444,9 @@ sparse: make function! [[
 							token: form :token
 						]
 					]
+					binary! [
+						token: as string! :token
+					]
 					word! [
 						switch token [
 							any opt some thru to [
@@ -2398,6 +2564,12 @@ sparse: make function! [[
 							]
 							i: i - 1
 						]
+					]
+					if mark [
+						if mark =? input = false [
+							set/local/at var copy/part mark input rules
+						]
+						mark: none
 					]
 				][
 					either keyword [
@@ -2526,18 +2698,18 @@ set 'parse make function! [[
 			]
 		]
 		string! binary! file! email! url! tag! issue! KWATZ! [
-			insert istack to string! input
+			insert istack as string! input
 			either all [
 				either case [
-					sparse/all/case to string! input rules
+					sparse/all/case as string! copy/shallow input rules
 				][
-					sparse/all to string! input rules
+					sparse/all as string! copy/shallow input rules
 				]
 			][
 				either case [
-					sparse/case to string! input rules
+					sparse/case as string! copy/shallow input rules
 				][
-					sparse to string! input rules
+					sparse as string! copy/shallow input rules
 				]
 			]
 		]
@@ -2958,7 +3130,11 @@ form: make function! [[
 				next' value
 				while [0 < length? value] [
 					tail' result
-					insert result " "
+					insert result either newline? value [
+						#"^/"
+					][
+						#" "
+					]
 					next' result
 					insert result form value/1
 					next' value
@@ -2966,8 +3142,14 @@ form: make function! [[
 			]
 			head' result
 		]
-		integer! binary! tag! path! set-path! get-path! lit-path! [
+		tag! path! set-path! get-path! lit-path! [
 			mold value
+		]
+		binary! [
+			result: mold value
+			remove/part result 2
+			remove/last result
+			result
 		]
 		datatype! [
 			result: to string! value
@@ -3455,6 +3637,73 @@ qsort: make function! [[
 ]]
 
 
+qsort-size: make function! [[
+	[retain]
+	v [series!]
+	left [integer!]
+	right [integer!]
+	size [integer!]
+	/local last last2 i i2 j n t u left2 right2
+][
+	if left >= right [exit]
+	j: (to integer! left + right / 2) - 1 * size + 1
+	left2: left - 1 * size + 1
+	right2: right - 1 * size + 1
+	n: 0
+	while [size > n] [
+		t: pick v left2 + n
+		poke v left2 + n pick v j + n
+		poke v j + n t
+		n: n + 1
+	]
+	last: left
+	i: left + 1
+	while [i <= right] [
+		i2: i - 1 * size + 1
+		t: pick v i2
+		u: pick v left2
+		either (type? t) = type? u [
+			if t < u [
+				next 'last
+				last2: last - 1 * size + 1
+				n: 0
+				while [size > n] [
+					u: pick v last2 + n
+					;poke v last2 + n t
+					poke v last2 + n pick v i2 + n
+					poke v i2 + n u
+					n: n + 1
+				]
+			]
+		][
+			if (type? t) < type? u [
+				next 'last
+				last2: last - 1 * size + 1
+				n: 0
+				while [size > n] [
+					u: pick v last2 + n
+					;poke v last2 + n t
+					poke v last2 + n pick v i2 + n
+					poke v i2 + n u
+					n: n + 1
+				]
+			]
+		]
+		next 'i
+	]
+	last2: last - 1 * size + 1
+	n: 0
+	while [size > n] [
+		t: pick v left2 + n
+		poke v left2 + n pick v last2 + n
+		poke v last2 + n t
+		n: n + 1
+	]
+	qsort-size v left last - 1 size
+	qsort-size v last + 1 right size
+]]
+
+
 ; ---- Random ----
 ; The array for the state vector
 mt: make block! 312
@@ -3508,20 +3757,6 @@ genrand64-int64: make function! [[
 
 
 ; ---- tab-completion ----
-strncmp: make function! [[
-	[retain]
-	cs	[any-string!]
-	ct	[any-string!]
-	n	[integer!]
-][
-	repeat i n [
-		if (pick cs i) <> pick ct i [
-			return (to integer! pick cs i) - pick ct i
-		]
-	]
-	return 0
-]]
-
 strspn: make function! [[
 	[retain]
 	cs	[any-string!]
@@ -3594,7 +3829,7 @@ tab-completion: make function! [[
 	l: length? s
 	forall values [
 		if l <= length? pick values 1 [
-			if 0 = strncmp s pick values 1 l [
+			if find/match pick values 1 s [
 				append selected pick values 1
 			]
 		]
@@ -3624,12 +3859,9 @@ tab-completion: make function! [[
 						poke selected 1 mold pick selected 1
 					]
 				]
-	;print "check 1"
 				;selected: sort selected
 				sort selected
-	;print "check 2"
 				sys-utils/columnize selected
-	;print "check 3"
 				head' line
 				prin system/console/prompt
 				prin line
@@ -3706,18 +3938,17 @@ parse-url: make function! [[
 ]	; net-utils
 
 m: make function! [[][do %test/cmandelbrot.w]]
-test: make function! [[][do %test/test.w]]
+test: make function! [[][run %test/test.w]]
 dt: make function! [[
 	"Time the execution of a block"
 	;[retain]
-	block [block! function! routine!]
+	block [any-type!] "Normally a block, function, or routine"
 	/local t
 ][
 	t: now/time/precise
 	do :block
 	now/time/precise - t
 ]]
-do %user.w
 
 if system/options/quiet = false [
 	print "Done"

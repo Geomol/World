@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,29 +15,25 @@
 
 #include "../file.h"
 
+#define realpath(N,R) _fullpath((R),(N),_MAX_PATH)
 
-/*
-int f_gets (char *output, int max, FILE *input) {
-	fgets (output, max, input);
-	if (ferror (input)) return errno;
-	return 0;
-}
-*/
-
-
-char path_buf[MAX_PATH];
+//char path_buf[MAX_PATH];
+char path_buf[PATH_MAX];
+char winfile[PATH_MAX];
+char resolved_name[PATH_MAX];
 
 
 int get_file_info (WorldFile *wfile) {
 	struct stat stbuf;
-	char *winfile = realloc (NULL, strlen (wfile->path) + 1);
+	/* TODO if strlen (wfile->path) > PATH_MAX) error ! */
+	//char *winfile = realloc (NULL, strlen (wfile->path) + 1);
 	strcpy (winfile, wfile->path);
-	winfile = to_local_file (winfile);
-	if (stat (winfile, &stbuf) == -1) {
-		free (winfile);
+	to_local_file (winfile);
+	if (NULL == realpath (winfile, resolved_name))
 		return -1;
-	}
-	free (winfile);
+	wfile->resolved_name = resolved_name;
+	if (stat (wfile->resolved_name, &stbuf) == -1)
+		return -1;
 	if (S_ISDIR (stbuf.st_mode)) {
 		wfile->type = FILE_TYPE_DIR;
 		wfile->size = 0;	// in order to be consistent on all systems
@@ -50,14 +47,8 @@ int get_file_info (WorldFile *wfile) {
 
 
 int open_dir (WorldFile *wfile) {
-	char *winfile = realloc (NULL, strlen (wfile->path) + 1);
-	strcpy (winfile, wfile->path);
-	winfile = to_local_file (winfile);
-	if ((wfile->handle = opendir (winfile)) == NULL) {
-		free (winfile);
+	if ((wfile->handle = opendir (wfile->resolved_name)) == NULL)
 		return -1;
-	}
-	free (winfile);
 	return 0;
 }
 
@@ -73,9 +64,16 @@ int read_dir (WorldFile *wfile) {
 		}
 		cp = dp->d_name;
 	} while (cp[0] == '.' && (cp[1] == 0 || cp[1] == '.'));
-	strncpy (path_buf, cp, MAX_PATH - 2);
-	//if (dp->d_type == DT_DIR)
-		//strcat (path_buf, "/");
+	strcpy (path_buf, wfile->resolved_name);
+	strcat (path_buf, "/");
+	strncat (path_buf, cp, PATH_MAX - 2);
+	struct stat stbuf;
+	if (stat (path_buf, &stbuf) != -1) {
+		strncpy (path_buf, cp, PATH_MAX - 2);
+		if (S_ISDIR (stbuf.st_mode)) {
+			strcat (path_buf, "/");
+		}
+	}
 	wfile->path = path_buf;
 	return 0;
 }
@@ -112,7 +110,6 @@ size_t fread_file (char *target, char *file, int binary) {
 	FILE *fp = binary ? fopen (winfile, "rb") : fopen (winfile, "r");
 	free (winfile);
 	if (fp == NULL) return -1;
-	//size_t size = fread (target, file_length (file), 1, fp);
 	fseek (fp, 0L, SEEK_END);
 	int length = ftell (fp);
 	fseek (fp, 0L, SEEK_SET);
@@ -160,31 +157,11 @@ char *to_world_file (char *file) {
 }
 
 
-char *what_dir () {
-	char *dir = getcwd (NULL, 0);
-	int length = strlen (dir);
-	char *what = malloc (length + 2);
-	memcpy (what, dir, length);
-	free (dir);
-	what[length] = '\\';
-	what[length + 1] = '\0';
-	return what;
-}
-
-
 char dir[256];
 
 char *get_pwd () {
-	//return getcwd (NULL, 0);
 	return getcwd (dir, 255);
 }
-
-
-/*
-void f_free_dir (char *dir) {
-	free (dir);
-}
-*/
 
 
 int change_dir (const char *path) {

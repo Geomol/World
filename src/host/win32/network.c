@@ -80,7 +80,6 @@ int receive_socket (int sockfd, char *buf, int length) {
 	int left = length;
 	do {
 		n = recv (sockfd, buf + total, left, 0);
-		//if (n == -1) break;
 		if (n <= 0) break;
 		total += n;
 		left -= n;

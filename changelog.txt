@@ -1,3 +1,57 @@
+18-Feb-2015
+-----------
+
+- Added vector! datatype
+- Added node! datatype
+- Added callback! datatype!
+- Added syntax for task-id! to lexer
+- Added system/options/format/real/separation to support thousand separators for datatypes like: real!
+- Added support for block newlines to SAVE
+- Added support for block newlines to FORM
+- Added support for rules like [copy var 2 skip] to PARSE
+- Added binary recognition to string parsing
+- Added shell command, HD (hexdump), to libs/shell.w
+- Added /d refinements to L and LS in libs/shell.w
+- Added tilde expansion to filenames (UNIX ~)
+- Added TO-LOCAL-FILE to cortex.w
+- Added none! as pointer argument to routines (as NULL in C)
+- Added any-type! as index argument for POKE
+- Added %xx style syntax to url! input
+- Added bitwise AND, OR, and XOR for binary!, bitset!, and tuple! types
+- Added -1.0i type valid complex number input to lexer
+- Added negative index as valid option in set-path notation, like block/-1: 42
+- Added support for typesets to PARSE, as in: [set n number!]
+- Added support for date! and time! datatypes in comparisons (<, >, <=, >=)
+- Added /case refinement to FIND
+- Added AS-RANGE to context.w
+
+- Added LOAD-LIBRARY
+- Changed LOAD from native to mezzanine in context.w
+- Added /lines refinement to LOAD
+- Added /lines refinement to SAVE
+- Added RUN to libs/shell.w with old DO functionality
+- Changed DO to not change directory for file! arguments
+- Removed system/script (it might be added for script arguments)
+- Changed CD to actually change directory instead of just updating system/script/path
+
+- Optimized path and set-path notation
+- Fixed string parsing when changing input
+- Fixed bug in READ, which sometimes gave binary output instead of string
+- Changed FORM of binary: form #{FF} gives "FF" instead of "#{FF}"
+- Changed FORM back regarding integer (no separator)
+- Fixed bug in POKE for negative index
+- Fixed bug related to preemptive multitasking and on-the-fly code generation
+- Fixed FOREACH in case of just one value in data
+- Fixed MOLD of URLs and files
+- Fixed TO string! [...] regarding formatting of integers (no separator)
+- Changed result of TO block! "World [] ...", so header is included in the result
+- Changed TAIL? to not return TRUE if past tail
+- Changed system/version/platform to be one of the words MacOSX, Linux, or Windows depending on OS
+- Reimplementation of word! datatype to better support words with upper-case. Words now don't need to be RETAINed/FREEd.
+
+- Other minor additions and changes
+
+
 18-Sep-2013
 -----------
 

@@ -10,10 +10,4 @@
 #define call_system(command)	system (command)
 
 
-/*
- * Function prototypes
- */
-//int call_system (char *command, int wait);
-
-
 #endif
