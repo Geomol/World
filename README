@@ -30,3 +30,5 @@ Known issues
 - Operators don't support literals as their first argument, as functions do, and they don't take refinements.
 
 - Compiling paths with functions e.g. in contexts within contexts isn't finalized.
+
+- The vector! datatype is poorly implemented
