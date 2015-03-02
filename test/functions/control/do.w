@@ -1,0 +1,1 @@
+[error! == type? try [do %]]

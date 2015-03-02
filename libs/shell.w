@@ -512,6 +512,7 @@ hd: make function! [[
 						loop 16 - (i // 16) [
 							prin "   "
 						]
+						if (i // 16) < 9 [prin " "]
 						prin "  "
 					]
 					append str #"|"

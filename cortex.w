@@ -1,8 +1,14 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		13-Feb-2015
-	Version:	0.7.1
+	Date:		2-Mar-2015
+	Version:	0.7.2
 	History: [
+		0.7.2	[2-3-2015	JN	{Changed FORM regarding issue!, set-word!, get-word!, lit-word!,
+									and refinement! values
+								 Fixed sparse regarding new FORM
+								 Moved dt (Delta-time) to %mezz/delta-time.w
+								 Added map!
+								 Removed /retain from CHANGE}]
 		0.7.1	[13-2-2015	JN	{Added as-range
 								 Added callback
 								 Added callback?}]
@@ -188,12 +194,12 @@ off:	make logic!	0
 on:		make logic!	1
 
 any-block!:		make typeset! [block! paren! path! set-path! get-path! lit-path!]
-any-function!:	make typeset! [operator! function! routine! callback! task!]
+any-function!:	make typeset! [operator! function! routine! task!]
 any-object!:	make typeset! [context! error! port!]
 any-paren!:		make typeset! [paren!]
 any-path!:		make typeset! [path! set-path! get-path! lit-path!]
 any-string!:	make typeset! [string! binary! file! email! url! tag! issue!]
-any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! pair! range! time! date! string! binary! file! email! url! tag! issue! bitset! tuple! vector! image! block! list! paren! path! set-path! get-path! lit-path! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! callback! context! error! task! task-id! port! handle! struct! library! node! KWATZ!]
+any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! pair! range! time! date! string! binary! file! email! url! tag! issue! bitset! tuple! vector! image! block! list! paren! path! set-path! get-path! lit-path! map! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! callback! context! error! task! task-id! port! handle! struct! library! node! KWATZ!]
 any-word!:		make typeset! [word! set-word! get-word! lit-word! refinement!]
 number!:		make typeset! [integer! real! complex! percent!]
 scalar!:		make typeset! [integer! real! complex! percent! char! pair! range! tuple! time!]
@@ -431,10 +437,11 @@ foreach: make function! [[
 	"Evaluate a block for each value(s) in a series."
 	[throw retain]
 	'word [word! block!] "Word or block or words to set each time"
-	data [series!] "Series to traverse"
+	data [series! map!] "Series to traverse"
 	body [block!] "Block to evaluate each time"
 	/local c l body' data' result
 ][
+	if map! = type? data [data: to block! data]
 	if 0 < length? data [
 		c: copy [none]
 		either block! = type? word [
@@ -611,7 +618,7 @@ until: make function! [[
 vector: make function! [[
 	"Define a vector."
 	[retain]
-	spec [block!] {Datatype and size}
+	spec [block!] {Datatype and size (opt block of initial values)}
 ][
 	make vector! spec
 ]]
@@ -645,6 +652,7 @@ path?:			make function! [["True for path values." value][path! = type? :value]]
 set-path?:		make function! [["True for set-path values." value][set-path! = type? :value]]
 get-path?:		make function! [["True for get-path values." value][get-path! = type? :value]]
 lit-path?:		make function! [["True for lit-path values." value][lit-path! = type? :value]]
+map?:			make function! [["True for map values." value][map! = type? :value]]
 datatype?:		make function! [["True for datatype values." value][datatype! = type? :value]]
 typeset?:		make function! [["True for typeset values." value][typeset! = type? :value]]
 word?:			make function! [["True for word values." value][word! = type? :value]]
@@ -1486,11 +1494,8 @@ join: make function! [[
 	value "Base value"
 	rest "Value or block of values"
 ][
-	;value: either series? :value [copy value] [form :value]
 	value: either find series! type? :value [copy value] [form :value]
-	; head insert tail value reduce :rest
 	append value reduce :rest
-	;value
 ]]
 of: make operator! [[
 	"Value at the specified position in a component or series."
@@ -1533,21 +1538,25 @@ sort: make function! [[
 empty?: make function! [[
 	"True if a series is empty."
 	[retain]
-	series [series! none!]
+	series [series! map! none!]
 ][
 	if none! = type? series [return true]	; This is not in R2, but is in R3
-	0 = length? head series
+	either map! = type? series [
+		0 = length? series
+	][
+		0 = length? head series
+	]
 ]]
 more?: make function! [[
 	"True if a series isn't at its tail."
-	series [series! none!]
+	series [series! map! none!]
 ][
 	if none! = type? series [return false]
 	0 < length? series
 ]]
 tail?: make function! [[
 	"True if a series is at its tail."
-	series [series!]
+	series [series! map!]
 ][
 	0 = length? series
 ]]
@@ -1557,71 +1566,38 @@ change: make function! [[
 	series [series!] "Series at point to change"
 	value "New value"
 	/part "Limit the amount to change to a given length or position"
-		range [integer! series!]
+		length [integer! series!]
 	/only "Change a series as a series"
 	/free "Free the old value"
-	/retain "Retain the new value"
 ][
 	either only [
-		either retain [
-			insert/only/retain either part [
-				either free [
-					remove/part/free series range
-				][
-					remove/part series range
-				]
+		insert/only either part [
+			either free [
+				remove/part/free series length
 			][
-				either free [
-					remove/free series
-				][
-					remove series
-				]
-			] :value
+				remove/part series length
+			]
 		][
-			insert/only either part [
-				either free [
-					remove/part/free series range
-				][
-					remove/part series range
-				]
+			either free [
+				remove/free series
 			][
-				either free [
-					remove/free series
-				][
-					remove series
-				]
-			] :value
-		]
+				remove series
+			]
+		] :value
 	][
-		either retain [
-			insert/retain either part [
-				either free [
-					remove/part/free series range
-				][
-					remove/part series range
-				]
+		insert either part [
+			either free [
+				remove/part/free series length
 			][
-				either free [
-					remove/free series
-				][
-					remove series
-				]
-			] :value
+				remove/part series length
+			]
 		][
-			insert either part [
-				either free [
-					remove/part/free series range
-				][
-					remove/part series range
-				]
+			either free [
+				remove/free series
 			][
-				either free [
-					remove/free series
-				][
-					remove series
-				]
-			] :value
-		]
+				remove series
+			]
+		] :value
 	]
 ]]
 
@@ -2410,6 +2386,7 @@ sparse: make function! [[
 													none! char! bitset! block! paren! datatype! []
 												] [
 													;mold token
+													;token: form :token
 												]
 											]
 										]
@@ -2436,6 +2413,7 @@ sparse: make function! [[
 											none! char! bitset! block! paren! datatype! []
 										] [
 											;mold token
+											;token: form :token
 										]
 									]
 								]
@@ -2460,9 +2438,10 @@ sparse: make function! [[
 									]
 								]	; get-token end
 								switch/default type?/word :token [
-									none! char! bitset! block! paren! datatype! []
+									none! char! bitset! block! paren! datatype! word! []
 								] [
 									;mold token
+									token: form :token
 								]
 							]
 							end skip | [keyword: token]
@@ -2605,6 +2584,7 @@ sparse: make function! [[
 							if mark [
 								;if not same? mark input
 								if mark =? input = false [
+									; TODO local ?
 									set/local/at var copy/part mark input rules
 								]
 								mark: none
@@ -3112,7 +3092,7 @@ enbase: make function! [[
 	result
 ]]
 form: make function! [[
-	"Form a value into a string."
+	"Convert a value into a human-readable string."
 	[retain]
 	value "The value to form"
 	/local result
@@ -3122,10 +3102,14 @@ form: make function! [[
 			;copy/shallow value
 			value
 		]
-		block! paren! [
+		block! paren! map! [
 			result: make string! 8
 			if 0 < length? value [
-				value: copy/shallow value
+				value: either map! = type? value [
+					to block! value
+				][
+					copy/shallow value
+				]
 				insert result form value/1
 				next' value
 				while [0 < length? value] [
@@ -3142,7 +3126,7 @@ form: make function! [[
 			]
 			head' result
 		]
-		tag! path! set-path! get-path! lit-path! [
+		tag! issue! path! set-path! get-path! lit-path! set-word! get-word! lit-word! refinement! [
 			mold value
 		]
 		binary! [
@@ -3939,16 +3923,6 @@ parse-url: make function! [[
 
 m: make function! [[][do %test/cmandelbrot.w]]
 test: make function! [[][run %test/test.w]]
-dt: make function! [[
-	"Time the execution of a block"
-	;[retain]
-	block [any-type!] "Normally a block, function, or routine"
-	/local t
-][
-	t: now/time/precise
-	do :block
-	now/time/precise - t
-]]
 
 if system/options/quiet = false [
 	print "Done"

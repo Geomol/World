@@ -24,7 +24,7 @@ pong: task [
 ping
 pong
 
-;(
+comment {
 ping: task [
 	"Ping"
 ][
@@ -43,7 +43,7 @@ pong: task [
 
 ping
 pong
-)
+}
 
 comment {
 ping: task [

@@ -26,6 +26,7 @@ int get_file_info (WorldFile *wfile) {
 	struct passwd *pw;
 	char *ptr;
 	/* TODO if strlen (wfile->path) > PATH_MAX) error ! */
+	wfile->resolved_name = resolved_name;
 	if ('~' == wfile->path[0]) {
 		switch (wfile->path[1]) {
 			case '\0':
@@ -56,13 +57,16 @@ int get_file_info (WorldFile *wfile) {
 				}
 				break;
 		}
-		if (NULL == realpath (path_buf, resolved_name))
+		if (NULL == realpath (path_buf, resolved_name)) {
+			strcpy (resolved_name, wfile->path);
 			return -1;
+		}
 	} else {
-		if (NULL == realpath (wfile->path, resolved_name))
+		if (NULL == realpath (wfile->path, resolved_name)) {
+			strcpy (resolved_name, wfile->path);
 			return -1;
+		}
 	}
-	wfile->resolved_name = resolved_name;
 	if (stat (wfile->resolved_name, &stbuf) == -1)
 		return -1;
 	if (S_ISDIR (stbuf.st_mode)) {

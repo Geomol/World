@@ -1,3 +1,24 @@
+2-Map-2015
+-----------
+
+- Added map! datatype
+- Removed inline comment syntax ;()
+- Added new inline comment syntaxes: \word-comment, \"string comment", and \{long string comment}
+- Added list! support to FIND/CASE
+- Added /case refinement to SELECT
+- Added /hour, /minute, and /second refinements to NOW
+- Added creation of vector! value with TO [vector! ...] #{ ... }
+- Completed creation of vector! value from external array-pointer with AS
+- Added MAP function to mezzanines (included in default %user.w)
+- Added REFLECT function to mezzanines
+- Added DT function to mezzanines (%mezz/delta-time.w, and included i default %user.w)
+- Changed FORM regarding issue!, set-word!, get-word!, lit-word!, and refinement! values
+- Changed behaviour when inserting in list! and position is at tail (also empty list)
+- Fixed memory problem related to READing URLs
+- Removed /retain refinement from POKE, INSERT, APPEND, and CHANGE (call RETAIN separately)
+
+- Other minor additions, changes, and bug fixes
+
 18-Feb-2015
 -----------
 
