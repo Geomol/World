@@ -11,7 +11,7 @@
 - Completed creation of vector! value from external array-pointer with AS
 - Added MAP function to mezzanines (included in default %user.w)
 - Added REFLECT function to mezzanines
-- Added DT function to mezzanines (%mezz/delta-time.w, and included i default %user.w)
+- Added DT function to mezzanines (%mezz/delta-time.w, and included in default %user.w)
 - Changed FORM regarding issue!, set-word!, get-word!, lit-word!, and refinement! values
 - Changed behaviour when inserting in list! and position is at tail (also empty list)
 - Fixed memory problem related to READing URLs
