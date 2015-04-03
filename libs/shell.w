@@ -196,7 +196,7 @@ match: make function! [[
 	/local c
 ][
 	while [(index? pat) < index? patend] [
-		c: pat/1
+		c: pick pat 1
 		next' pat
 		either c = #"*" [
 			if (index? pat) = index? patend [
@@ -219,7 +219,7 @@ match: make function! [[
 				]
 				next' name
 			][
-				if c <> name/1 [
+				if c <> pick name 1 [
 					return false
 				]
 				next' name
@@ -623,7 +623,7 @@ l: make function! [[
 	either (0 = length? list) and (1 = length? dirs) [
 		list: sort read dirs/1
 		if not a [
-			while [all [list/1 list/1/1 = #"."]] [
+			while [all [list/1 #"." = pick list/1 1]] [
 				next' list
 			]
 		]
@@ -650,7 +650,7 @@ l: make function! [[
 			print [newline dir]
 			list: sort read dir
 			if not a [
-				while [all [list/1 list/1/1 = #"."]] [
+				while [all [list/1 #"." = pick list/1 1]] [
 					next' list
 				]
 			]
@@ -705,7 +705,7 @@ ls: make function! [[
 	either (0 = length? list) and (1 = length? dirs) [
 		list: sort read dirs/1
 		if not a [
-			while [all [list/1 list/1/1 = #"."]] [
+			while [all [list/1 #"." = pick list/1 1]] [
 				next 'list
 			]
 		]
@@ -716,7 +716,7 @@ ls: make function! [[
 			print [newline dir]
 			list: sort read dir
 			if not a [
-				while [all [list/1 list/1/1 = #"."]] [
+				while [all [list/1 #"." = pick list/1 1]] [
 					next 'list
 				]
 			]
