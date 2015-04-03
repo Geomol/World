@@ -316,16 +316,16 @@ cd: make function! [[
 ][
 	either value? 'dir [
 		dir: dirize to file! either refinement! = type? dir [mold dir] [dir]
-		if dir/1 <> #"/" [
+		if #"/" <> pick dir 1 [
 			;insert dir system/script/path
 			insert dir dirize to-world-file getcwd none 0
 		]
 		mark: find next dir #"/"
 		while [mark] [
-			either all [mark/2 = #"." mark/3 = #"/"] [
+			either all [#"." = pick mark 2 #"/" = pick mark 3] [
 				remove/part mark 2
 			][
-				either all [mark/2 = #"." mark/3 = #"." mark/4 = #"/"] [
+				either all [#"." = pick mark 2 #"." = pick mark 3 #"/" = pick mark 4] [
 					remove/part mark 3
 					remove/part dir mark
 					skip 'mark (index? dir) - index? mark
