@@ -17,7 +17,7 @@
 	d: %dir/
 	read d/file
 - Added word! support to INCLUDE, so e.g. %libs/shell.w can be included with:
-	include shell:q
+	include shell
 - Added support for YYYY-MM-DD date input
 - Added support for ISO 8601 date input (2015-03-08T13:06:50+01:00)
 - Added additional date! functionality like:
