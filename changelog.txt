@@ -1,3 +1,43 @@
+3-Apr-2015
+----------
+
+- Added lit-string! datatype (syntax: '" ... ")
+- Added possible map! keys of type: logic! integer! real! complex! percent! char! pair! range! time! date!
+	string! lit-string! binary! file! email! url! tag! issue! tuple! refinement! task-id! datatype!
+	word! get-word! set-word! lit-word! - some of them are redirected to other types for efficiency
+- Added handle! as possible type of series argument to AS, when defining vectors
+- Added typecast of struct! to binary! with: TO binary!
+- Added support for vector! type to APPENDing a binary! / any-string!
+- Added support for port! type to LENGTH?
+	(relate to file ports, and this might not work using some file systems)
+- Added support for range! type to index argument for PICK
+- Added support for integers input in base 2 through 36. The format is Base#Number, so e.g. 16#FF00
+	For bases greater than 10, the values 10-35 are represented by A-Z or a-z.
+- Added support for dir/file syntax for variables:
+	d: %dir/
+	read d/file
+- Added word! support to INCLUDE, so e.g. %libs/shell.w can be included with:
+	include shell:q
+- Added support for YYYY-MM-DD date input
+- Added support for ISO 8601 date input (2015-03-08T13:06:50+01:00)
+- Added additional date! functionality like:
+	TO integer! date, TO date! integer, and MAKE date! [1 2 3]
+- Changed date input from simple UNIX time to Gregorian/Julian calendar
+	Epoch is still 1-Jan-1970, but dates since 1-Jan-0001 can be handled as valid input.
+	Dates between 2-Sep-1752 (end of Julian) and 14-Sep-1752 (start of Gregorian) are invalid dates.
+- Changed tab-completion to use FIND/CASE
+- Changed COMMENT from native to mezzanine in %cortex.w
+- Removed real! and percent! as type of index argument for PICK and POKE; they now works as for SELECT
+- Removed real! and percent! as type of offset argument for SKIP and SKIP'
+- Fixed PICK on date, both for index being of type integer! and word!
+- Fixed bug in DEBASE related to FIND/CASE
+- Fixed memory bug related to expanding words space
+- Added some more tests
+- Added memory freeing status, when quitting world, if trace/recycle is on. Good for testing.
+
+- Other minor additions, changes, and bug fixes
+
+
 2-Map-2015
 -----------
 
@@ -18,6 +58,7 @@
 - Removed /retain refinement from POKE, INSERT, APPEND, and CHANGE (call RETAIN separately)
 
 - Other minor additions, changes, and bug fixes
+
 
 18-Feb-2015
 -----------

@@ -89,6 +89,11 @@ int close_file (int fd) {
 }
 
 
+off_t file_pos (int fd) {
+	return lseek (fd, 0, SEEK_CUR);
+}
+
+
 int64_t file_length (char *file, int binary) {
 	char *winfile = realloc (NULL, strlen (file) + 1);
 	strcpy (winfile, file);

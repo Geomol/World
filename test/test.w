@@ -37,12 +37,14 @@ do-tests %datatypes/integer.w
 do-tests %datatypes/path.w
 do-tests %datatypes/set-path.w
 do-tests %datatypes/range.w
+do-tests %datatypes/time.w
+do-tests %datatypes/date.w
 do-tests %datatypes/binary.w
 do-tests %datatypes/tag.w
-do-tests %datatypes/time.w
 do-tests %datatypes/list.w
 do-tests %datatypes/routine.w
 do-tests %datatypes/port.w
+do-tests %datatypes/struct.w
 
 ;print "math"
 do-tests %math/unary-minus.w

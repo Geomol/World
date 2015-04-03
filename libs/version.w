@@ -54,7 +54,7 @@ Win32?: make function! [[
 	system/version/platform = 'Windows and (system/version/variation/1 = 2)
 ]]
 
-comment {
+\{
 Win64?: make function! [[
 	"True if running 64-bit under Windows."
 ][

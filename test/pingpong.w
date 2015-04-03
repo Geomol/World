@@ -24,7 +24,7 @@ pong: task [
 ping
 pong
 
-comment {
+\{
 ping: task [
 	"Ping"
 ][
@@ -45,7 +45,7 @@ ping
 pong
 }
 
-comment {
+\{
 ping: task [
 ][
 	loop 10 [

@@ -1,6 +1,6 @@
 World []
 
-include %shell.w
+include shell
 
 do %mezz/delta-time.w
 do %mezz/is.w

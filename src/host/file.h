@@ -16,9 +16,9 @@
 
 
 typedef struct {
-	char		*path;
-	char		*resolved_name;
-	void		*handle;
+	char*		path;
+	char*		resolved_name;
+	void*		handle;
 	long long	size;
 	time_t		time;
 	long		type;	/* 1 = file, 2 = dir */
@@ -34,17 +34,18 @@ typedef struct {
 /*
  * Function prototypes
  */
-int		 get_file_info (WorldFile *wfile);
-int		 open_dir (WorldFile *wfile);
-int		 read_dir (WorldFile *wfile);
-int		 open_file (char *file);
-int		 close_file (int fd);
-int64_t	 file_length (char *file, int binary);
-size_t	 fread_file (char *target, char *file, int binary);
-size_t	 fwrite_file (char *file, char *value, int length, int binary);
-char	*to_local_file (char *file);	/* Used by host/win32/file.c */
-char	*to_world_file (char *file);
-char	*get_pwd ();
-int		 change_dir (const char *path);
+int		get_file_info (WorldFile* wfile);
+int		open_dir (WorldFile* wfile);
+int		read_dir (WorldFile* wfile);
+int		open_file (char* file);
+int		close_file (int fd);
+off_t	file_pos (int fd);
+int64_t	file_length (char* file, int binary);
+size_t	fread_file (char* target, char* file, int binary);
+size_t	fwrite_file (char* file, char* value, int length, int binary);
+char*	to_local_file (char* file);	/* Used by host/win32/file.c */
+char*	to_world_file (char* file);
+char*	get_pwd ();
+int		change_dir (const char* path);
 
 #endif

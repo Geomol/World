@@ -1,1 +1,7 @@
 [[a b] == insert [] [a b]]
+[a: next copy "abc" "bcabc" = insert head a a]
+[a: copy "abcdef" remove a next' a "bdefcdef" = head insert a next a]
+[a: copy "abcdef" remove/part a 2 next' a "cfdef" = head insert a skip a 2]
+[a: copy "abcdef" remove a skip' a 3 "bcdfef" = head insert a next a]
+[a: copy "abcdef" remove a skip' a 4 remove a back' a "bcddee" = head insert a back a]
+[a: copy "abcdef" skip' a 4 clear a back' a "abccdd" = head insert a back a]

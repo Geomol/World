@@ -20,14 +20,17 @@ enum {
 };
 
 
-void	 init_history ();
-void	 free_history ();
-void	 alloc_line ();
-int		 check_esc ();
-int		 check_input (int *auto_brackets, int *attempt, int allow_tab);
-char	*w_get_line ();
-void	 meet_tab_completion (char *result, int l);
-char	*w_readline_script ();
+void	init_history ();
+void	free_history ();
+void	alloc_line ();
+/*
+int		any_input ();
+*/
+int		check_esc ();
+int		check_input (int* auto_brackets, int* attempt, int allow_tab);
+char*	w_get_line ();
+void	meet_tab_completion (char* result, int l);
+char*	w_readline_script ();
 
 
 #endif

@@ -1,8 +1,13 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		2-Mar-2015
-	Version:	0.7.2
+	Date:		3-Apr-2015
+	Version:	0.7.6
 	History: [
+		0.7.6	[3-4-2015	JN	{Added word! support to INCLUDE}]
+		0.7.5	[30-3-2015	JN	{Made comment a mezzanine again}]
+		0.7.4	[12-3-2015	JN	{Added lit-string!}]
+		0.7.3	[10-3-2015	JN	{Changed FIND to FIND/CASE in debase
+								 Changed FIND to FIND/CASE in tab-completion}]
 		0.7.2	[2-3-2015	JN	{Changed FORM regarding issue!, set-word!, get-word!, lit-word!,
 									and refinement! values
 								 Fixed sparse regarding new FORM
@@ -179,13 +184,19 @@ World [
 	]
 ]
 
-;comment {	; exclude all
+comment: make function! [[
+	"Ignore the argument value."
+	value "A string, block, or any other value"
+][
+]]
+
+;\{	; exclude all
 if system/options/quiet = false [
 	prin "Loading Cortex... "
 ]
 
 license: make function! [[
-	"Print the World/Cortex license agreement."
+	'"Print the World/Cortex license agreement."
 ][
 	print system/license
 ]]
@@ -205,7 +216,7 @@ number!:		make typeset! [integer! real! complex! percent!]
 scalar!:		make typeset! [integer! real! complex! percent! char! pair! range! tuple! time!]
 series!:		make typeset! [string! binary! file! email! url! tag! issue! block! list! paren! path! set-path! get-path! lit-path! KWATZ!]
 
-comment {
+\{
 system/schemes: make system/schemes [
 	http: make system/standard/socket-scheme [
 		title:	"HyperText Transport Protocol v1.1"
@@ -235,56 +246,56 @@ crlf:		"^M^/"
 
 ; Comparison
 same?: make function! [[
-	"True if the values are identical."
+	'"True if the values are identical."
 	value1
 	value2
 ][
 	:value1 =? :value2
 ]]
 equal?: make function! [[
-	"True if the values are equal."
+	'"True if the values are equal."
 	value1
 	value2
 ][
 	:value1 = :value2
 ]]
 strict-equal?: make function! [[
-	"True if the values are equal and of the same datatype."
+	'"True if the values are equal and of the same datatype."
 	value1
 	value2
 ][
 	:value1 == :value2
 ]]
 not-equal?: make function! [[
-	"True if the values are not equal."
+	'"True if the values are not equal."
 	value1
 	value2
 ][
 	:value1 <> :value2
 ]]
 greater?: make function! [[
-	"True if the first value is greater than the second."
+	'"True if the first value is greater than the second."
 	value1
 	value2
 ][
 	:value1 > :value2
 ]]
 lesser?: make function! [[
-	"True if the first value is less than the second."
+	'"True if the first value is less than the second."
 	value1
 	value2
 ][
 	:value1 < :value2
 ]]
 greater-or-equal?: make function! [[
-	"True if the first value is greater than or equal the second."
+	'"True if the first value is greater than or equal the second."
 	value1
 	value2
 ][
 	:value1 >= :value2
 ]]
 lesser-or-equal?: make function! [[
-	"True if the first value is less than or equal the second."
+	'"True if the first value is less than or equal the second."
 	value1
 	value2
 ][
@@ -293,25 +304,25 @@ lesser-or-equal?: make function! [[
 
 ; Context
 context: make function! [[
-	"Define a unique, underived context."
+	'"Define a unique, underived context."
 	[throw retain]	; TODO Thy is throw here?
-	block [block!] "Context variables and values"
+	block [block!] '"Context variables and values"
 ][
 	make context! block
 ]]
 node: make function! [[
-	"Define a node"
+	'"Define a node"
 	[throw retain]	; TODO Thy is throw here?
-	block [block!] "Node variables and values"
+	block [block!] '"Node variables and values"
 ][
 	make node! block
 ]]
 
 ; Control
 actor: make function! [[
-	"Define a task after the actor model."
+	'"Define a task after the actor model."
 	[retain]
-	body [block!] "The body block of the actor"
+	body [block!] '"The body block of the actor"
 ][
 	insert body [
 		wait 'message
@@ -322,19 +333,19 @@ actor: make function! [[
 	]
 ]]
 callback: make function! [[
-	"Define a callback function with given spec and body."
+	'"Define a callback function with given spec and body."
 	[retain]
-	spec [block!] {"Description" followed by arguments (opt type and string)}
-	body [block!] "The body block of the callback function"
+	spec [block!] '"^"Description^" followed by arguments (opt type and string)"
+	body [block!] '"The body block of the callback function"
 ][
 	make callback! reduce [spec body]
 ]]
 compose: make function! [[
-	"Evaluate a block of expressions, only evaluate parens, and return a block."
+	'"Evaluate a block of expressions, only evaluate parens, and return a block."
 	[throw retain]
-	value [block!] "Block to compose"
-	/deep "Compose nested blocks"
-	/only "Insert a block value as a block"
+	value [block!] '"Block to compose"
+	/deep '"Compose nested blocks"
+	/only '"Insert a block value as a block"
 	/local ptr v
 ][
 	ptr: copy/shallow value
@@ -386,21 +397,21 @@ compose: make function! [[
 	value
 ]]
 does: make function! [[
-	"Define a function that has no arguments."
+	'"Define a function that has no arguments."
 	[retain]
-	body [block!] "The body block of the function"
+	body [block!] '"The body block of the function"
 ][
 	make function! reduce [[] body]
 	;make function! back insert/only remove next [[]] body
 ]]
 for: make function! [[
-	"Evaluate a block over a range of values."
+	'"Evaluate a block over a range of values."
 	[throw retain]
-	'word [word!] "Variable to hold current value"
-	start [integer! real! percent! char!] "Starting value"
-	end [integer! real! percent! char!] "Ending value"
-	bump [integer! real! percent! char!] "Amount to skip each time"
-	body [block!] "Block to evaluate each time"
+	'word [word!] '"Variable to hold current value"
+	start [integer! real! percent! char!] '"Starting value"
+	end [integer! real! percent! char!] '"Ending value"
+	bump [integer! real! percent! char!] '"Amount to skip each time"
+	body [block!] '"Block to evaluate each time"
 	/local do-body
 ][
 	;if end == #"^(FF)" [
@@ -419,10 +430,10 @@ for: make function! [[
 	]
 ]]
 forall: make function! [[
-	"Evaluate a block for every value in a series."
+	'"Evaluate a block for every value in a series."
 	[throw retain]
-	'word [word!] "Word set to each position in series"
-	body [block!] "Block to evaluate each time"
+	'word [word!] '"Word set to each position in series"
+	body [block!] '"Block to evaluate each time"
 	/local l result
 ][
 	word: get/at word body
@@ -434,11 +445,11 @@ forall: make function! [[
 	]
 ]]
 foreach: make function! [[
-	"Evaluate a block for each value(s) in a series."
+	'"Evaluate a block for each value(s) in a series."
 	[throw retain]
-	'word [word! block!] "Word or block or words to set each time"
-	data [series! map!] "Series to traverse"
-	body [block!] "Block to evaluate each time"
+	'word [word! block!] '"Word or block or words to set each time"
+	data [series! map!] '"Series to traverse"
+	body [block!] '"Block to evaluate each time"
 	/local c l body' data' result
 ][
 	if map! = type? data [data: to block! data]
@@ -478,18 +489,18 @@ foreach: make function! [[
 	result
 ]]
 func: make function! [[
-	"Define a function with given spec and body."
+	'"Define a function with given spec and body."
 	[retain]
-	spec [block!] {"Description" followed by arguments (opt type and string)}
-	body [block!] "The body block of the function"
+	spec [block!] '"^"Description^" followed by arguments (opt type and string)"
+	body [block!] '"The body block of the function"
 ][
 	make function! reduce [spec body]
 ]]
 has: make function! [[
-	"Define a function that has local variables but no arguments."
+	'"Define a function that has local variables but no arguments."
 	[retain]
 	locals [block!]
-	body [block!] "The body block of the function"
+	body [block!] '"The body block of the function"
 ][
 	;make function! reduce [insert insert clear [] locals /local body]
 	;make function! insert/only
@@ -501,10 +512,10 @@ has: make function! [[
 			append copy [/local] locals
 ]]
 loop: make function! [[
-	"Evaluate a block a specified number of times."
+	'"Evaluate a block a specified number of times."
 	[throw retain]
-	count [integer!] "Number of repetitions"
-	block [block!] "Block to evaluate each time"
+	count [integer!] '"Number of repetitions"
+	block [block!] '"Block to evaluate each time"
 ][
 	;if false = compiled? block [
 		;compile/at block 'loop
@@ -514,37 +525,37 @@ loop: make function! [[
 	while [0 <= count: count - 1] block
 ]]
 native: make function! [[
-	"Define a native function with given spec and native code."
+	'"Define a native function with given spec and native code."
 	[retain]
-	spec [block!] {"Description" followed by arguments (opt type and string)}
-	nc [integer!] "Native code specifying the native function"
+	spec [block!] '"^"Description^" followed by arguments (opt type and string)"
+	nc [integer!] '"Native code specifying the native function"
 ][
 	make function! reduce [spec nc]
 ]]
 native-op: make function! [[
-	"Define a native operator with given spec and native code."
+	'"Define a native operator with given spec and native code."
 	[retain]
-	spec [block!] {"Description" followed by exactly two arguments (opt type and string)}
-	nc [integer!] "Native code specifying the native operator"
+	spec [block!] '"^"Description^" followed by exactly two arguments (opt type and string)"
+	nc [integer!] '"Native code specifying the native operator"
 ][
 	make operator! reduce [spec nc]
 ]]
 operator: make function! [[
-	"Define an operator with given spec and body."
+	'"Define an operator with given spec and body."
 	[retain]
-	spec [block!] {"Description" followed by exactly two arguments (opt type and string)}
-	body [block!] "The body block of the operator"
+	spec [block!] '"^"Description^" followed by exactly two arguments (opt type and string)"
+	body [block!] '"The body block of the operator"
 ][
 	make operator! reduce [spec body]
 ]]
 ;q: :quit
 q: make function! reduce [pick :quit 1 pick :quit 2]
 repeat: make function! [[
-	"Evaluate a block a number of times."
+	'"Evaluate a block a number of times."
 	[throw retain]
-	'word [word!] "Word to set each time"
-	value [integer!] "Maximum number"
-	body [block!] "Block to evaluate each time"
+	'word [word!] '"Word to set each time"
+	value [integer!] '"Maximum number"
+	body [block!] '"Block to evaluate each time"
 	/local spec do-body start
 ][
 	spec: [[throw retain]]
@@ -558,27 +569,27 @@ repeat: make function! [[
 	]
 ]]
 routine: make function! [[
-	"Define a library routine"
+	'"Define a library routine"
 	[retain]
-	spec [block!] {"Description" followed by library, routine name, arguments and return type}
+	spec [block!] '"^"Description^" followed by library, routine name, arguments and return type"
 ][
 	make routine! spec
 ]]
 struct: make function! [[
-	"Define a structure."
+	'"Define a structure."
 	[retain]
-	spec [block!] {"Description" followed by datatypes and arguments (opt string)}
-	values [block! none! word!] "Initial values"
+	spec [block!] '"^"Description^" followed by datatypes and arguments (opt string)"
+	values [block! none! word!] '"Initial values"
 ][
 	make struct! reduce [spec values]
 ]]
 switch: make function! [[
-	"Select a choice and evaluate the block that follows it."
+	'"Select a choice and evaluate the block that follows it."
 	[throw retain]
-	value "Value to search for"
-	cases [block!] "Block of cases to search"
+	value '"Value to search for"
+	cases [block!] '"Block of cases to search"
 	/default
-		case "Default case if no others are found"
+		case '"Default case if no others are found"
 	/local to-do
 ][
 	to-do: find cases either datatype! = type? :value [
@@ -599,15 +610,15 @@ switch: make function! [[
 	]
 ]]
 task: make function! [[
-	"Define a task with given spec and body."
+	'"Define a task with given spec and body."
 	[retain]
-	spec [block!] {"Description"}
-	body [block!] "The body block of the task"
+	spec [block!] '"^"Description^""
+	body [block!] '"The body block of the task"
 ][
 	make task! reduce [spec body]
 ]]
 until: make function! [[
-	"Evaluate a block until it is true."
+	'"Evaluate a block until it is true."
 	[throw retain]
 	block [block!]
 	/local result
@@ -616,9 +627,9 @@ until: make function! [[
 	result
 ]]
 vector: make function! [[
-	"Define a vector."
+	'"Define a vector."
 	[retain]
-	spec [block!] {Datatype and size (opt block of initial values)}
+	spec [block!] '"Datatype and size (opt block of initial values)"
 ][
 	make vector! spec
 ]]
@@ -638,6 +649,7 @@ time?:			make function! [["True for time values." value][time! = type? :value]]
 date?:			make function! [["True for date values." value][date! = type? :value]]
 binary?:		make function! [["True for binary values." value][binary! = type? :value]]
 string?:		make function! [["True for string values." value][string! = type? :value]]
+lit-string?:	make function! [["True for lit-string values." value][lit-string! = type? :value]]
 file?:			make function! [["True for file values." value][file! = type? :value]]
 email?:			make function! [["True for email values." value][email! = type? :value]]
 url?:			make function! [["True for url values." value][url! = type? :value]]
@@ -744,10 +756,13 @@ dump-obj: make function! [[
 				return clip-str mold pick :val 1
 			]
 		]
-		if any-object? :val [val: words-of val]
-		;if typeset? :val [val: to-block val]
-		if port? :val [val: reduce [val/scheme val/ref]]
-		;if gob? :val [return form reduce ["offset:" val/offset "size:" val/size]]
+		any [
+			if vector! = type? :val [val: reduce [pick val 'type pick val 'size]]
+			if find any-object! type? :val [val: words-of val]
+			;if typeset? :val [val: to-block val]
+			if port! = type? :val [val: reduce [val/scheme val/ref]]
+			;if gob? :val [return form reduce ["offset:" val/offset "size:" val/size]]
+		]
 		clip-str mold :val
 	]]
 	form-pad: make function! [[[retain] val size] [
@@ -862,7 +877,11 @@ More information: http://www.world-lang.org
 		prin either find "aeiou" first mold type? :value [
 			["an" type? :value "of value: "]
 		][
-			["a" type? :value "of value: "]
+			either context! = type? :value [
+				["a" type? :value "with content: "]
+			][
+				["a" type? :value "of value: "]
+			]
 		]
 		print either any-object? :value [print "" dump-obj :value] [mold :value]
 		exit
@@ -884,8 +903,10 @@ More information: http://www.world-lang.org
 		prin mold word
 		item: args/1
 		either find [function! callback! task!] type?/word :value [
-			while [item and ((:item <> /local) or (string! = type? args/2))] [
-				if (string! <> type? :item) and (block! <> type? :item) [
+			while [item and ((:item <> /local) or (string! = type? args/2)
+						or (lit-string! = type? args/2))] [
+				if (string! <> type? :item) and (lit-string! <> type? :item)
+						and (block! <> type? :item) [
 					prin ["" mold :item]
 				]
 				item: pick next' args 1
@@ -908,7 +929,7 @@ More information: http://www.world-lang.org
 					]
 					next 'arg-no
 					skip' item 2
-					if string! = type? item/1 [
+					if (string! = type? item/1) or (lit-string! = type? item/1) [
 						next' item
 					]
 				]
@@ -919,7 +940,7 @@ More information: http://www.world-lang.org
 	head' args
 	item: args/1
 	print "^/^/Description:"
-	if string! = type? :item [
+	if (string! = type? :item) or (lit-string! = type? :item) [
 		print ["   " item]
 		item: pick next' args 1
 	]
@@ -1074,7 +1095,7 @@ More information: http://www.world-lang.org
 	prin ""
 ]]
 ?: make function! reduce [pick :help 1 pick :help 2]
-comment {
+\{
 ??: make function! [[
     "Print a variable name followed by its molded value. (debugging)"
     'name
@@ -1324,14 +1345,15 @@ input: make function! [[
 load: make function! [[
 	"Load a file or string. Bind block to global context."
 	[retain]
-	source	[file! string! url!]
+	source	[file! string! lit-string! url!]
 	/library "Force file to be a dynamic library"
 	/lines "Handle data as lines"
 	/all "Also load potential header"
 	/local data
 ][
 	data: switch/default type? :source [
-		string!	[source]
+		string!
+		lit-string!	[source]
 		file!	[
 			either library [
 				return load-library source
@@ -2756,7 +2778,7 @@ debase: make function! [[
 					]
 					c: ptr/1
 				]
-				hi: index? find chars c
+				hi: index? find/case chars c
 				if hi > 16 [hi: hi - 6]
 				hi: shift hi - 1 4
 				next' ptr
@@ -2774,7 +2796,7 @@ debase: make function! [[
 					]
 					c: ptr/1
 				]
-				lo: index? find chars c
+				lo: index? find/case chars c
 				if lo > 16 [lo: lo - 6]
 				append result to char! hi + lo - 1
 				next' ptr
@@ -2849,7 +2871,7 @@ debase: make function! [[
 		if c = #"=" [
 			return none
 		]
-		hi: to char! shift -1 + index? find chars c 2
+		hi: to char! shift -1 + index? find/case chars c 2
 		next' ptr
 		if 0 = length? ptr [
 			return none
@@ -2868,7 +2890,7 @@ debase: make function! [[
 		if c = #"=" [
 			return none
 		]
-		lo: #"^(FF)" + index? find chars c
+		lo: #"^(FF)" + index? find/case chars c
 		append result hi + shift lo -4
 		hi: shift lo 4
 		next' ptr
@@ -2908,7 +2930,7 @@ debase: make function! [[
 				return none
 			]
 		][
-			lo: #"^(FF)" + index? find chars c
+			lo: #"^(FF)" + index? find/case chars c
 			append result hi + shift lo -2
 			hi: shift lo 6
 		]
@@ -2930,7 +2952,7 @@ debase: make function! [[
 		either c = #"=" [
 			return result
 		][
-			lo: #"^(FF)" + index? find chars c
+			lo: #"^(FF)" + index? find/case chars c
 			append result hi + lo
 		]
 		next' ptr
@@ -3257,12 +3279,10 @@ retain-all: make function! [[
 	]
 ]]
 include: make function! [[
-	file [file!]
-	/local do-file
+	'file [file! word!]
 ][
-	do-file: copy system/options/path
-	append do-file %libs/
-	do append do-file file
+	if word! = type? file [file: append to file! file %.w]
+	do append append copy system/options/path %libs/ file
 ]]
 kill: make function! [[
 	"Terminate a task."
@@ -3270,7 +3290,7 @@ kill: make function! [[
 ][
 	tasks/kill task-id
 ]]
-;comment [
+;\{
 sys-utils: make context! [
 
 columnize: make function! [[
@@ -3813,7 +3833,7 @@ tab-completion: make function! [[
 	l: length? s
 	forall values [
 		if l <= length? pick values 1 [
-			if find/match pick values 1 s [
+			if find/case/match pick values 1 s [
 				append selected pick values 1
 			]
 		]
@@ -3857,7 +3877,7 @@ tab-completion: make function! [[
 ]]
 
 ]; sys-utils
-;]	; comment
+;}	; comment
 
 ; Additional functionality
 net-utils: make context! [

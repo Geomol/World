@@ -12,3 +12,6 @@
 [true = zero? 0.0]
 
 ; Series
+
+; Strings
+["Hello, World!" = to string! debase enbase "Hello, World!"]

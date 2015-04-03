@@ -12,7 +12,7 @@ World [
 ; LIBC routines
 ;
 
-libc: load/library any [
+libc: load-library any [
 	if system/version/platform = 'MacOSX [%/usr/lib/libc.dylib]
 	if system/version/platform = 'Linux [
 		either system/version/variation/3 = 2 [
@@ -77,7 +77,7 @@ dirize: make function! [[
 	[retain]
 	path [file! string! url!]
 ][
-	either #"/" <> pick path length? path [join path #"/"] [copy path]
+	either #"/" <> pick path length? path [append copy path #"/"] [copy path]
 ]]
 
 
@@ -462,33 +462,27 @@ grep: make function! [[
 hd: make function! [[
 	"Hexadecimal dump"
 	'file
-	/local list info buf i str
+	/local hd' hd-file list info buf i str
 ][
 	if false = value? 'file [
 		make error! "hd is missing one or more arguments"
 	]
-	list: glob to file! either refinement! = type? file [mold file] [file]
-	if 1 = length? list [
-		if error? try [
-			query list/1
-		] [
-			print ["hd:" list/1 "-- no such file"]
-			exit
-		]
-	]
-	str: make string! 18
-	foreach file list [
-		info: query file
-		either info/type = 'dir [
-			print ["hd:" file "-- is a directory"]
-		][
-			buf: read file
-			if 0 < length? buf [
-				i: 0
+	hd': does [
+		if 0 < length? buf [
+			i: 0
+			while [not do [
+				clear str
+				append str #"|"
+				prin [copy/part skip mold to binary! i 10 8 ""]
 				while [not do [
-					clear str
-					append str #"|"
-					prin [copy/part skip mold to binary! i 10 8 ""]
+					prin ["" copy/part skip mold to binary! buf/1 2 2]
+					append str either buf/1 >= 32 and (buf/1 <= 126) [buf/1] [#"."]
+					next' buf
+					i: i + 1
+					(0 = length? buf) or (i // 8 = 0)
+				]] []
+				if 0 < length? buf [
+					prin " "
 					while [not do [
 						prin ["" copy/part skip mold to binary! buf/1 2 2]
 						append str either buf/1 >= 32 and (buf/1 <= 126) [buf/1] [#"."]
@@ -496,32 +490,64 @@ hd: make function! [[
 						i: i + 1
 						(0 = length? buf) or (i // 8 = 0)
 					]] []
-					if 0 < length? buf [
-						prin " "
-						while [not do [
-							prin ["" copy/part skip mold to binary! buf/1 2 2]
-							append str either buf/1 >= 32 and (buf/1 <= 126) [buf/1] [#"."]
-							next' buf
-							i: i + 1
-							(0 = length? buf) or (i // 8 = 0)
-						]] []
+				]
+				either i // 16 = 0 [
+					prin "  "
+				][
+					loop 16 - (i // 16) [
+						prin "   "
 					]
-					either i // 16 = 0 [
-						prin "  "
-					][
-						loop 16 - (i // 16) [
-							prin "   "
-						]
-						if (i // 16) < 9 [prin " "]
-						prin "  "
-					]
-					append str #"|"
-					print str
-					;print ""
-					0 = length? buf
-				]] []
-				print [copy/part skip mold to binary! i 10 8 " "]
+					if (i // 16) < 9 [prin " "]
+					prin "  "
+				]
+				append str #"|"
+				print str
+				;print ""
+				0 = length? buf
+			]] []
+			print [copy/part skip mold to binary! i 10 8 " "]
+		]
+		true
+	]
+	hd-file: does [
+		list: glob to file! either refinement! = type? file [mold file] [file]
+		if 1 = length? list [
+			if error? try [
+				query list/1
+			] [
+				print ["hd:" list/1 "-- no such file"]
+				exit
 			]
+		]
+		foreach file list [
+			info: query file
+			either info/type = 'dir [
+				print ["hd:" file "-- is a directory"]
+			][
+				buf: read file
+				hd'
+			]
+		]
+		true
+	]
+	str: make string! 18
+	any [
+		if word! = type? :file [
+		;either word! = type? :file [
+			either value? file [
+				buf: to string! get file
+				hd'
+			][
+				hd-file
+			]
+		]
+		;[
+		if find [file! refinement!] type? :file [
+			hd-file
+		]
+		do [
+			buf: to string! :file
+			hd'
 		]
 	]
 	exit
@@ -608,7 +634,7 @@ l: make function! [[
 		max-name: max-name + 2
 		foreach file list [
 			append s file
-			print-file join dirs/1 file
+			print-file append copy dirs/1 file
 		]
 	][
 		max-name: 0
@@ -635,7 +661,7 @@ l: make function! [[
 			max-name: max-name + 2
 			foreach file list [
 				append s file
-				print-file join dir file
+				print-file append copy dir file
 			]
 		]
 	]
@@ -753,7 +779,7 @@ pwd: make function! [[
 
 
 run: make function! [[
-	"Run a World script at its location"
+	"Run a World script at its location."
 	value
 	/local d f r
 ][

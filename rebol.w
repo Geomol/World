@@ -367,7 +367,7 @@ tangent:		make function! [[value][
 true?:		make function! [[value][either none = :value or (false = :value) [false][true]]]
 
 ; Port, File and IO
-comment {
+\{
 load: make function! [[
 	"Loads a file or string."
 	source [file! string!]
@@ -435,7 +435,7 @@ tenth: make function! [[
 ][
 	pick series 10
 ]]
-comment {
+\{
 world_append: :append
 append: make function! [[
 	"Appends a value to the tail of a series and returns the series head."
@@ -512,7 +512,7 @@ entab: make function! [[
 		number [integer!]
 	/local sp ;mark n
 ][
-	comment {
+	\{
 	mark: find string complement make bitset! " "
 	either none! = type? mark [
 		while [string/1 = #" "] [remove string]

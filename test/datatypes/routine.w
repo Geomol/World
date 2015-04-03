@@ -1,5 +1,5 @@
 [
-	either system/version/platform = 'macosx [
+	either system/version/platform = 'MacOSX [
 		if value? 'libc [
 			free :libc
 		]
@@ -8,7 +8,7 @@
 		libc: load/library %/usr/lib/libc.dylib
 		tanh: make routine! [libc "tanh" [[real!] double] double real!]
 	][
-		either system/version/platform = 'win32 [
+		either system/version/platform = 'Windows [
 			if value? 'msvcrt [
 				free :msvcrt
 			]

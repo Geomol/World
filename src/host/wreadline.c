@@ -76,6 +76,19 @@ static void insert_char (int ch) {
 }
 
 
+/*
+int any_input () {
+	int ch = getchar ();
+	if (ch == EOF) {
+		return 0;
+	} else {
+		ungetc (ch, stdin);
+		return 1;
+	}
+}
+*/
+
+
 int check_esc () {
 	return (getchar () == KEY_ESC);
 }

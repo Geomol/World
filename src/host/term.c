@@ -68,7 +68,7 @@ void w_printf (char *fmt, ...) {
 				break;
 			case 'd':
 				ival = va_arg (ap, int64_t);
-				printf (LONGLONGD, ival);
+				printf (LONGLONGD, (long long int) ival);
 				break;
 			default:
 				putchar ('%');
