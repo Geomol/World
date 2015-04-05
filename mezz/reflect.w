@@ -38,7 +38,7 @@ reflect: make function! [[
 		]
 		title [
 			spec: pick :value 1
-			if string! = type? spec/1 [copy spec/1]
+			if (string! = type? spec/1) or (lit-string! = type? spec/1) [copy spec/1]
 		]
 	]
 ]]
