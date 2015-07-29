@@ -6,7 +6,7 @@ World [
 
 reflect: make function! [[
 	"Returns specific details about a datatype."
-	value	[any-function!]
+	value	[any-function! struct!]
 	field	[word! issue!]	"spec, body, args, #args, words, title"
 	/local spec blk
 ][

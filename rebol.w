@@ -1,8 +1,10 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		28-Oct-2014
-	Version:	0.0.28
+	Date:		24-Jul-2015
+	Version:	0.0.29
 	History: [
+		0.0.29	[24-7-2015	JN	{Added any-object! and any-object?
+								 Changed to-hex regarding new issue! implementation}]
 		0.0.28	[28-10-2014	JN	{Changed empty? to not be like tail?}]
 		0.0.27	[10-8-2013	JN	{Added forskip}]
 		0.0.26	[28-5-2013	JN	{Moved last to cortex.w}]
@@ -61,6 +63,7 @@ backspace:	#"^H"
 decimal!:	:real!
 object!:	:context!
 op!:		:operator!
+any-object!:	make typeset! [context! error! port!]
 
 ; Colors
 aqua:			40.100.130
@@ -234,6 +237,7 @@ function: make function! [[
 ]]
 
 ; Datatype
+any-object?:	make function! [["True for any-object values." value][find any-object! type? :value]]
 as-binary: make function! [[
 	"Coerces any type of string into a binary! datatype without copying it."
 	string [any-string!]
@@ -301,11 +305,11 @@ to-hex: make function! [[
 	/size "Specify number of hex digits in result"
 		length [integer!]
 ][
-	to issue! either size [
+	pick to block! back' insert either size [
 		copy/part skip mold to binary! value 18 - length length
 	][
 		copy/part skip mold to binary! value 2 16
-	]
+	] #"#" 1
 ]]
 
 ; Logic

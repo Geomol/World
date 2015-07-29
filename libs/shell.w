@@ -3,9 +3,15 @@ World [
 	Author:	"John Niclasen"
 	Purpose: {
 		Implement following shell commands:
-			cat, cd, co, di, echo, grep, hd, l, ls, more, pwd
+			cat, cd, co, di, echo, grep, hd, l, ls, more, pwd, run
 	}
 ]
+
+
+if value? 'shell [exit]
+
+
+shell: 'world
 
 
 ;
@@ -27,7 +33,7 @@ libc: load-library any [
 
 either system/version/platform = 'Windows [
 getcwd: make routine! [
-	"Get current working directory."
+	'"Get current working directory."
 	[typecheck]
 	libc "_getcwd" [
 		buffer [string!] pointer
@@ -38,7 +44,7 @@ getcwd: make routine! [
 
 
 chdir: make routine! [
-	"Change working directory"
+	'"Change working directory"
 	[typecheck]
 	libc "_chdir" [
 		filename [string!] pointer
@@ -47,7 +53,7 @@ chdir: make routine! [
 ]
 ][
 getcwd: make routine! [
-	"Get current working directory."
+	'"Get current working directory."
 	[typecheck]
 	libc "getcwd" [
 		buffer [string!] pointer
@@ -58,7 +64,7 @@ getcwd: make routine! [
 
 
 chdir: make routine! [
-	"Change working directory"
+	'"Change working directory"
 	[typecheck]
 	libc "chdir" [
 		filename [string!] pointer
@@ -73,8 +79,7 @@ chdir: make routine! [
 ;
 
 dirize: make function! [[
-	"Return a copy of the path turned into a directory."
-	[retain]
+	'"Return a copy of the path turned into a directory."
 	path [file! string! url!]
 ][
 	either #"/" <> pick path length? path [append copy path #"/"] [copy path]
@@ -83,10 +88,10 @@ dirize: make function! [[
 
 ; glob still need ** for matching any level of directories
 glob: make function! [[
-	"Generate pathnames matching a pattern"
+	'"Generate pathnames matching a pattern"
 	[retain]
-	pattern	[file!]
-	/local pathbuf list err glob2 glob3 match
+	pattern	[file! path! word! refinement!]
+	/local word pathbuf list err glob2 glob3 match
 ][
 glob2: make function! [[
 	[retain]
@@ -117,8 +122,6 @@ glob2: make function! [[
 		if any [find pathend #"*" find pathend #"?"] [
 			anymeta: 1
 		]
-
-
 		either anymeta = 0 [	; No expansion, do next segment.
 			pathend: q
 			pattern: p
@@ -164,23 +167,15 @@ glob3: make function! [[
 	foreach file read dir [
 		if #"/" = last file [remove/last file]
 		; Initial DOT must be matched literally.
-		;either (#"." = pick file 1) and (#"." <> pick pattern 1) [
-			; skip it
-		;][
 		if (#"." <> pick file 1) or (#"." = pick pattern 1) [
-			;clear pathend
 			append pathend file
-
-
 			if match copy/shallow pathend copy/shallow pattern copy/shallow restpattern [
 				err: glob2 pathbuf tail pathend restpattern pglob
 				if err <> 0 [
 					return err
 				]
-			;][
-				;clear pathend
 			]
-				clear pathend
+			clear pathend
 		]
 	]
 ]]
@@ -231,6 +226,29 @@ match: make function! [[
 
 
 	; The rest of glob
+	pattern: any [
+		if path! = type? pattern [
+			either value? word: pick pattern 1 [
+				word: get word
+				either (file! = type? word) and (#"/" = pick word length? word) [
+					append copy word next pattern
+				][
+					to file! pattern
+				]
+			][
+				to file! pattern
+			]
+		]
+		if word! = type? pattern [
+			to file! either value? pattern [
+				get pattern
+			][
+				pattern
+			]
+		]
+		if refinement! = type? pattern [to file! mold pattern]
+		to file! pattern
+	]
 	list: copy []
 	if pattern <> % [
 		pathbuf: make file! 1024
@@ -241,7 +259,8 @@ match: make function! [[
 
 
 split-path: make function! [[
-	"Splits a file or URL path. Returns a block containing path and target."
+	'"Splits a file or URL path. Returns a block containing path and target."
+	[retain]
 	target [file! url!]
 	/local dir pos
 ][
@@ -281,26 +300,32 @@ split-path: make function! [[
 ;
 
 cat: make function! [[
-	"Concatenate and print files"
+	'"Concatenate and print files"
 	'file
 	/local list info
 ][
 	if false = value? 'file [
 		make error! "cat is missing one or more arguments"
 	]
-	list: glob to file! either refinement! = type? file [mold file] [file]
+	list: glob file
+	\{
 	if 1 = length? list [
 		if error? try [
 			query list/1
 		] [
-			print ["cat:" list/1 "-- no such file"]
+			print ['"cat:" list/1 '"-- no such file"]
 			exit
 		]
+	]
+	}
+	if 0 = length? list [
+		print ['"cat:" file '"-- no such file"]
+		exit
 	]
 	foreach file list [
 		info: query file
 		either info/type = 'dir [
-			print ["cat:" file "-- is a directory"]
+			print ['"cat:" file '"-- is a directory"]
 		][
 			prin detab read file
 		]
@@ -310,8 +335,8 @@ cat: make function! [[
 
 
 cd: make function! [[
-	"Change the active directory path."
-	'dir "New directory path"
+	'"Change the active directory path."
+	'dir '"New directory path"
 	/local mark
 ][
 	either value? 'dir [
@@ -353,11 +378,11 @@ cd: make function! [[
 
 
 co: make function! [[
-	"Compile a function, operator or block to executable code."
+	'"Compile a function, operator or block to executable code."
 	'source	[function! operator! block!]
-	/at "Choose a context for compilation"
-	context [context! word! block!] "Reference to the target context"
-	/reset "Reset the compile state"
+	/at '"Choose a context for compilation"
+	context [context! word! block!] '"Reference to the target context"
+	/reset '"Reset the compile state"
 ][
 	if word! = type? :source [
 		source: get source
@@ -379,7 +404,7 @@ co: make function! [[
 
 
 di: make function! [[
-	"Translate a compiled function, operator or block into assembly language."
+	'"Translate a compiled function, operator or block into assembly language."
 	'code	[function! operator! block!]
 ][
 	if word! = type? :code [
@@ -390,42 +415,43 @@ di: make function! [[
 
 
 echo: make function! [[
-	"Write arguments to the standard output"
+	'"Write arguments to the standard output"
 	'string
 	/local list
 ][
 	print either value? 'string [
-		list: glob to file! either refinement! = type? string [mold string] [string]
+		list: glob string
 		either 0 = length? list [
 			string
 		][
 			list
 		]
 	][
-		""
+		'""
 	]
 ]]
 
 
 grep: make function! [[
-	"Print lines matching a pattern."
+	'"Print lines matching a pattern."
 	'pattern
 	'file
-	/l "List files"
+	/case '"Characters are case-sensitive"
+	/l '"List files"
 	/local list info name? buf line start end
 ][
 	if (false = value? 'pattern) or (false = value? 'file) [
 		make error! "grep is missing one or more arguments"
 	]
 	pattern: to string! pattern
-	list: glob to file! either refinement! = type? file [mold file] [file]
+	list: glob file
 	either l [
 		foreach file list [
 			info: query file
 			either info/type = 'dir [
-				print ["grep:" file "-- is a directory"]
+				print ['"grep:" file '"-- is a directory"]
 			][
-				if find read file pattern [
+				if either case [find/case read file pattern] [find read file pattern] [
 					print file
 				]
 			]
@@ -435,10 +461,10 @@ grep: make function! [[
 		foreach file list [
 			info: query file
 			either info/type = 'dir [
-				print ["grep:" file "-- is a directory"]
+				print ['"grep:" file '"-- is a directory"]
 			][
 				buf: read file
-				while [line: find buf pattern] [
+				while [line: either case [find/case buf pattern] [find buf pattern]] [
 					start: find/reverse line #"^/"
 					either start = none [
 						start: buf
@@ -446,9 +472,8 @@ grep: make function! [[
 						next 'start
 					]
 					end: find line #"^/"
-					;if end = none [end: skip line length? line]
 					if end = none [end: tail line]
-					if name? [prin file prin ":"]
+					if name? [prin file prin '":"]
 					print detab copy/part start end
 					buf: end
 				]
@@ -460,7 +485,7 @@ grep: make function! [[
 
 
 hd: make function! [[
-	"Hexadecimal dump"
+	'"Hexadecimal dump"
 	'file
 	/local hd' hd-file list info buf i str
 ][
@@ -473,7 +498,7 @@ hd: make function! [[
 			while [not do [
 				clear str
 				append str #"|"
-				prin [copy/part skip mold to binary! i 10 8 ""]
+				prin [copy/part skip mold to binary! i 10 8 '""]
 				while [not do [
 					prin ["" copy/part skip mold to binary! buf/1 2 2]
 					append str either buf/1 >= 32 and (buf/1 <= 126) [buf/1] [#"."]
@@ -482,7 +507,7 @@ hd: make function! [[
 					(0 = length? buf) or (i // 8 = 0)
 				]] []
 				if 0 < length? buf [
-					prin " "
+					prin '" "
 					while [not do [
 						prin ["" copy/part skip mold to binary! buf/1 2 2]
 						append str either buf/1 >= 32 and (buf/1 <= 126) [buf/1] [#"."]
@@ -492,37 +517,42 @@ hd: make function! [[
 					]] []
 				]
 				either i // 16 = 0 [
-					prin "  "
+					prin '"  "
 				][
 					loop 16 - (i // 16) [
-						prin "   "
+						prin '"   "
 					]
-					if (i // 16) < 9 [prin " "]
-					prin "  "
+					if (i // 16) < 9 [prin '" "]
+					prin '"  "
 				]
 				append str #"|"
 				print str
-				;print ""
 				0 = length? buf
 			]] []
-			print [copy/part skip mold to binary! i 10 8 " "]
+			print [copy/part skip mold to binary! i 10 8 '" "]
 		]
 		true
 	]
 	hd-file: does [
-		list: glob to file! either refinement! = type? file [mold file] [file]
+		list: glob file
+		\{
 		if 1 = length? list [
 			if error? try [
 				query list/1
 			] [
-				print ["hd:" list/1 "-- no such file"]
+				print ['"hd:" list/1 '"-- no such file"]
 				exit
 			]
+		]
+		}
+		if 0 = length? list [
+			print ['"hd:" file '"-- no such file"]
+			exit
 		]
 		foreach file list [
 			info: query file
 			either info/type = 'dir [
-				print ["hd:" file "-- is a directory"]
+				print ['"hd:" file '"-- is a directory"]
 			][
 				buf: read file
 				hd'
@@ -533,15 +563,19 @@ hd: make function! [[
 	str: make string! 18
 	any [
 		if word! = type? :file [
-		;either word! = type? :file [
 			either value? file [
-				buf: to string! get file
+				;buf: to string! get file
+				buf: get file
+				buf: to string! either find any-context! type? :buf [
+					dump-obj buf
+				][
+					:buf
+				]
 				hd'
 			][
 				hd-file
 			]
 		]
-		;[
 		if find [file! refinement!] type? :file [
 			hd-file
 		]
@@ -555,15 +589,13 @@ hd: make function! [[
 
 
 l: make function! [[
-	"List directory contents in long format."
-	[retain]
+	'"List directory contents in long format."
 	'dir-word [any-type!]
-	/a	"List all entries except for . and .."
-	/d	"Directories are listed as plain files (not searched recursively)"
+	/a	'"List all entries except for . and .."
+	/d	'"Directories are listed as plain files (not searched recursively)"
 	/local print-file list dirs info max-name s
 ][
 	print-file: make function! [[
-		[retain]
 		filename
 	][
 		append/dup s " " max-name - ((length? s) // max-name)
@@ -595,9 +627,10 @@ l: make function! [[
 	]]
 	;dir: throw-on-error
 	either value? 'dir-word [
-		list: glob to file! either refinement! = type? dir-word [mold dir-word] [dir-word]
+		list: glob dir-word
 		if 0 = length? list [
-			print ["l:" dir-word "-- no such file or directory"]
+			print ['"l:" dir-word '"-- no such file or directory"]
+			exit
 		]
 	][
 		list: copy [%./]
@@ -670,17 +703,18 @@ l: make function! [[
 
 
 ls: make function! [[
-	"List directory contents."
+	'"List directory contents."
 	'dir-word [any-type!]
-	/a	"List all entries except for . and .."
-	/d	"Directories are listed as plain files (not searched recursively)"
+	/a	'"List all entries except for . and .."
+	/d	'"Directories are listed as plain files (not searched recursively)"
 	/local list dirs info
 ][
 	;dir: throw-on-error
 	either value? 'dir-word [
-		list: glob to file! either refinement! = type? dir-word [mold dir-word] [dir-word]
+		list: glob dir-word
 		if 0 = length? list [
-			print ["ls:" dir-word "-- no such file or directory"]
+			print ['"ls:" dir-word '"-- no such file or directory"]
+			exit
 		]
 	][
 		list: copy [%./]
@@ -728,26 +762,32 @@ ls: make function! [[
 
 
 more: make function! [[
-	"Opposite of less."
+	'"Opposite of less."
 	'file
-	/local lines a
+	/local list lines a
 ][
 	if false = value? 'file [
 		make error! "more is missing one or more arguments"
 	]
-	list: glob to file! either refinement! = type? file [mold file] [file]
+	list: glob file
+	\{
 	if 1 = length? list [
 		if error? try [
 			query list/1
 		] [
-			print ["more:" list/1 "-- no such file"]
+			print ['"more:" list/1 '"-- no such file"]
 			exit
 		]
+	]
+	}
+	if 0 = length? list [
+		print ['"more:" file '"-- no such file"]
+		exit
 	]
 	foreach file list [
 		info: query file
 		either info/type = 'dir [
-			print ["more:" file "-- is a directory"]
+			print ['"more:" file '"-- is a directory"]
 		][
 			lines: parse-utils/split-string read file make bitset! "^/"
 			repeat i min 24 length? lines [
@@ -771,7 +811,7 @@ more: make function! [[
 
 
 pwd: make function! [[
-	"Return working directory name."
+	'"Return working directory name."
 ][
 	;copy system/script/path
 	dirize to-world-file getcwd none 0
@@ -779,7 +819,7 @@ pwd: make function! [[
 
 
 run: make function! [[
-	"Run a World script at its location."
+	'"Run a World script at its location."
 	value
 	/local d f r
 ][

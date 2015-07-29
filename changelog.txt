@@ -1,3 +1,49 @@
+29-Jul-2015
+-----------
+
+- Added new comment! datatype (see document doc/cortex_alpha.pdf for explanation)
+- Added support for comments to LOAD/ALL (can e.g. load TeX syntax)
+- Added new map! syntax: @[ ... ]
+- Added path! support to INCLUDE, so e.g. %libs/dir/file.w can be included with:
+	include dir/file
+- Added /part refinement to LOWERCASE and UPPERCASE in %cortex.w
+- Added function REPLACE to %cortex.w
+- Added functions BITSET? and TUPLE? to %cortex.w
+- Added support for paren! type to BIND
+- Added support for PICK file-port 1 (same as file-port/1)
+- Added support for PICK <struct> 1, returning structure specification block
+- Added /case refinement to GREP in %libs/shell.w
+- Added support for context! to HD in %libs/shell.w
+- Added set-word! NAME: option to task specification block
+- Added context! and error! as possible VALUE argument to POKE
+- Added native SWAP-BYTES function to toggle endianness for vector! and struct! values
+- Removed endian swapping, when creating a vector! from a binary! with TO
+- Removed endian swapping, when creating a binary! from a struct! with TO
+- Added support for converting a vector into a binary with: TO binary! my-vector
+- Added date input with time zones offset by minutes and daylight saving time
+	(like 24-Jul-2015/10:12:00+05:45dst)
+- Added any-context! to possible VALUE argument for SET, when setting a context
+	(This will set individual words in the context to values, the same words hold in the VALUE context.)
+- Added task-id and task-name to system/standard/error
+- Added better error control and reporting to tasks
+- Changed task behaviour, so they cannot change data outside the task (fixes data race problem)
+- Changed TO STRING! of time value to not give seconds, if zero.
+	(to string! 2:00 gives "2:00", not "2:00:00". FORM also gives "2:00". MOLD gives "2:00:00".)
+- Changed LOAD/LINES to not include empty lines, unless /ALL refinement is set
+- Changed POKE to return data argument
+- Changed issue! from being an any-string! and string-like to be an any-word! and word-like
+- Changed any-object! to any-context! and changed ANY-OBJECT? to ANY-CONTEXT?
+- Changed binding rules, when making a context based on other contexts
+- Fixed known issues with path! datatype, so functions in contexts within contexts are compiled correctly
+- Fixed bug when creating strings from special chars like tab, newline, etc.
+- Fixed bug in DETAB
+- Fixed bug in MAP (function in %mezz/map.w)
+- Did some performance and memory optimization
+- Gave memory system an overhaul (retaining and freeing)
+
+- Other minor additions, changes, and bug fixes
+
+
 3-Apr-2015
 ----------
 
@@ -38,7 +84,7 @@
 - Other minor additions, changes, and bug fixes
 
 
-2-Map-2015
+2-Mar-2015
 -----------
 
 - Added map! datatype

@@ -1,0 +1,1 @@
+[none! == type? any [false]]

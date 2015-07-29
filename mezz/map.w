@@ -12,7 +12,7 @@ map: make function! [[
 ][
 	series': copy/shallow series
 	result: make type? series' length? series'
-	spec: pick :function 1
+	spec: copy/shallow pick :function 1
 	len: 0
 	while [all [0 < length? spec refinement! <> type? spec/1]] [
 		if find [word! lit-word!] type? spec/1 [
@@ -20,7 +20,7 @@ map: make function! [[
 		]
 		next' spec
 	]
-	todo: insert clear [] 'function
+	todo: insert copy [] 'function
 	while [0 < length? series'] [
 		either operator! = type? :function [
 			insert todo series'/1

@@ -53,6 +53,7 @@ do-tests %math/paren.w
 ;print "functions"
 do-tests %functions/function.w
 do-tests %functions/control/all.w
+do-tests %functions/control/any.w
 do-tests %functions/control/do.w
 do-tests %functions/control/for.w
 do-tests %functions/control/forall.w
