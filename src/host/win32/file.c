@@ -46,6 +46,16 @@ int get_file_info (WorldFile *wfile) {
 }
 
 
+int full_path (WorldFile *wfile) {
+	strcpy (winfile, wfile->path);
+	to_local_file (winfile);
+	if (NULL == realpath (winfile, resolved_name))
+		return -1;
+	wfile->resolved_name = resolved_name;
+	return 0;
+}
+
+
 int open_dir (WorldFile *wfile) {
 	if ((wfile->handle = opendir (wfile->resolved_name)) == NULL)
 		return -1;

@@ -1,8 +1,9 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		28-Jul-2015
-	Version:	0.7.12
+	Date:		29-Jul-2015
+	Version:	0.7.13
 	History: [
+		0.7.13	[29-7-2015	JN	{Added system/options/home to INCLUDE}]
 		0.7.12	[28-7-2015	JN	{Added comment!
 								 Change LOAD to use MAKE block! to load comments}]
 		0.7.11	[24-7-2015	JN	{Changed any-object to any-context
@@ -3446,7 +3447,9 @@ include: make function! [[
 	'file [file! word! path!]
 ][
 	if find [word! path!] type? file [file: append to file! file %.w]
-	do append append copy system/options/path %libs/ file
+	if error! = type? try [do append append copy system/options/path %libs/ file] [
+		do append append copy system/options/home %libs/ file
+	]
 ]]
 kill: make function! [[
 	'"Terminate a task."

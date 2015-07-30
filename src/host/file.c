@@ -81,6 +81,17 @@ int get_file_info (WorldFile *wfile) {
 }
 
 
+int full_path (WorldFile *wfile) {
+	/* TODO if strlen (wfile->path) > PATH_MAX) error ! */
+	wfile->resolved_name = resolved_name;
+	if (NULL == realpath (wfile->path, resolved_name)) {
+		strcpy (resolved_name, wfile->path);
+		return -1;
+	}
+	return 0;
+}
+
+
 int open_dir (WorldFile *wfile) {
 	if ((wfile->handle = opendir (wfile->resolved_name)) == NULL)
 		return -1;

@@ -372,7 +372,10 @@ cd: make function! [[
 	]
 	;chdir to-local-file system/script/path
 	;system/script/path
-	chdir to-local-file dir
+	if 0 <> chdir to-local-file dir [
+		print ['"cd:" to-local-file dir '"-- no such directory"]
+		exit
+	]
 	dir
 ]]
 

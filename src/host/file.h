@@ -35,6 +35,7 @@ typedef struct {
  * Function prototypes
  */
 int		get_file_info (WorldFile* wfile);
+int		full_path (WorldFile *wfile);
 int		open_dir (WorldFile* wfile);
 int		read_dir (WorldFile* wfile);
 int		open_file (char* file);
