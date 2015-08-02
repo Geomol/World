@@ -1,8 +1,9 @@
 World [
 	Title:		"REBOL Extension"
-	Date:		24-Jul-2015
-	Version:	0.0.29
+	Date:		30-Jul-2015
+	Version:	0.0.30
 	History: [
+		0.0.30	[30-7-2015	JN	{Fixed bug in USE}]
 		0.0.29	[24-7-2015	JN	{Added any-object! and any-object?
 								 Changed to-hex regarding new issue! implementation}]
 		0.0.28	[28-10-2014	JN	{Changed empty? to not be like tail?}]
@@ -180,14 +181,20 @@ use: make function! [[
 	[retain]
 	words [block!]
 	body [block!]
-	/local b
+	/local w b
 ][
-	b: to block! words
-	forall b [
-		poke b 1 to set-word! b/1
+	w: to block! words
+	forall w [
+		poke w 1 to set-word! w/1
 	]
-	append b reduce ['none 'do body]
-	make context! b
+	b: to block! body
+	forall b [
+		if (set-word? b/1) and (not find w b/1) [
+			change/part b reduce ['set to lit-word! b/1] 1
+		]
+	]
+	append w reduce ['none 'do b]
+	make context! w
 ]]
 with: make function! [[		; Not sure where this came from!?
 	"Executes a block at a context"

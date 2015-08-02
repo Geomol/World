@@ -45,9 +45,10 @@
 #define FALSE	0
 #define TRUE	1
 
-static CURLM *multihandle;
-static CURL *easyhandle[HANDLECOUNT];
-static int transfer_done[HANDLECOUNT];
+static CURLM	*multihandle;
+static CURL		*easyhandle[HANDLECOUNT];
+static int		transfer_done[HANDLECOUNT];
+static CURLcode	result[HANDLECOUNT];
 
 
 static int get_handle () {
@@ -82,9 +83,17 @@ int netcurl_init () {
 }
 
 
-void netcurl_cleanup (int id) {
+int netcurl_cleanup (int id, const char** strerror) {
+	if (result[id] != CURLE_OK)
+		*strerror = curl_easy_strerror (result[id]);
 	curl_easy_cleanup (easyhandle[id]);
 	easyhandle[id] = NULL;
+	return result[id];
+}
+
+
+void netcurl_set_trace (int id, long onoff) {
+	curl_easy_setopt (easyhandle[id], CURLOPT_VERBOSE, onoff);
 }
 
 
@@ -96,6 +105,7 @@ int netcurl_read (void *data_struct, char *url, int id, long *usec,
 
 	curl_multi_add_handle (multihandle, easyhandle[id]);
 	transfer_done[id] = FALSE;
+	result[id] = CURLE_OK;
 
 	int running;	// Amount of easyhandles running
 	curl_multi_perform (multihandle, &running);
@@ -118,8 +128,10 @@ int netcurl_read (void *data_struct, char *url, int id, long *usec,
 				j++;
 			if (j == HANDLECOUNT)
 				puts ("**** unknown msg->easy_handle in netcurl.c ****");
-			else
+			else {
 				transfer_done[j] = TRUE;
+				result[j] = msg->data.result;
+			}
 		} else {
 			puts ("**** unknown msg in netcurl.c ****");
 		}
@@ -136,6 +148,11 @@ int netcurl_read (void *data_struct, char *url, int id, long *usec,
 
 
 int netcurl_wait_io (int id, long *usec) {
+	if (transfer_done[id]) {	// To speed up multiple IOs in multiple tasks
+		curl_multi_remove_handle (multihandle, easyhandle[id]);
+		return W_IO_DONE;
+	}
+
 	int running;	// Amount of easyhandles running
 	curl_multi_perform (multihandle, &running);
 
@@ -182,6 +199,7 @@ int netcurl_wait_io (int id, long *usec) {
 				puts ("**** unknown msg->easy_handle in netcurl.c ****");
 			else {
 				transfer_done[j] = TRUE;
+				result[j] = msg->data.result;
 			}
 		} else {
 			puts ("**** unknown msg in netcurl.c ****");

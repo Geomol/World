@@ -11,7 +11,12 @@
 [true = zero? 0]
 [true = zero? 0.0]
 
+; Port, File and IO
+[0 = length? load "^@"]
+[1 = length? load/all "^@"]
+
 ; Series
+[[0 0 3] = change copy [1 2 3] [0 0]]
 
 ; Strings
 ["Hello, World!" = to string! debase enbase "Hello, World!"]

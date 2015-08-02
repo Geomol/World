@@ -1,3 +1,22 @@
+2-Aug-2015
+----------
+
+- Added TRACE/NET to enable/disable network tracing (for libcurl)
+- Added memory handling to task messaging (SEND / RECEIVE) and put restriction on message types
+- Added typeset immediate! and function IMMEDIATE? to %cortex.w
+- Reimplemented typeset! as an immediate! type (was a data structure before)
+- Added more tests
+- Changed list! to be more block! like, when converted to string!
+- Changed CHANGE to change several values in SERIES, if VALUE argument is a series!
+- Changed issue! datatype to not be an any-word!
+	(e.g. #42 is a valid issue, but 42 can't be a valid word)
+- Fixed bug in USE in %rebol.w
+- Fixed LOAD/ALL to be able to load binary data
+- Fixed error output, so too long strings are cut
+
+- Other minor additions, changes, and bug fixes
+
+
 30-Jul-2015
 -----------
 

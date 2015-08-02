@@ -3,6 +3,12 @@ World [
 	Author:	"John Niclasen"
 ]
 
+if value? 'ping [
+	free :ping
+	free :pong
+]
+
+\{
 ping: task [
 	"Ping"
 ][
@@ -23,6 +29,7 @@ pong: task [
 
 ping
 pong
+}
 
 \{
 ping: task [
@@ -45,7 +52,6 @@ ping
 pong
 }
 
-\{
 ping: task [
 ][
 	loop 10 [
@@ -68,5 +74,4 @@ pong: task [
 
 id1: ping
 id2: pong
-}
 

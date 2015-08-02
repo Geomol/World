@@ -1,11 +1,16 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		29-Jul-2015
-	Version:	0.7.13
+	Date:		2-Aug-2015
+	Version:	0.7.16
 	History: [
+		0.7.16	[2-8-2015	JN	{Added immediate! and IMMEDIATE?
+								 Changed typeset! to an immediate!}]
+		0.7.15	[31-7-2015	JN	{Changed PRINT-LAST-ERROR to not output long strings}]
+		0.7.14	[30-7-2015	JN	{Changed CHANGE
+								 Added READ/BINARY to LOAD in case of /ALL}]
 		0.7.13	[29-7-2015	JN	{Added system/options/home to INCLUDE}]
 		0.7.12	[28-7-2015	JN	{Added comment!
-								 Change LOAD to use MAKE block! to load comments}]
+								 Changed LOAD to use MAKE block! to load comments}]
 		0.7.11	[24-7-2015	JN	{Changed any-object to any-context
 								 Added copy/shallow to parse-utils/split-string}]
 		0.7.10	[23-7-2015	JN	{Added task-id and task-name to PRINT-LAST-ERROR}]
@@ -235,8 +240,9 @@ any-function!:	make typeset! [operator! function! routine! task!]
 any-paren!:		make typeset! [paren!]
 any-path!:		make typeset! [path! set-path! get-path! lit-path!]
 any-string!:	make typeset! [string! binary! file! email! url! tag!]
-any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! pair! range! time! date! string! binary! file! email! url! tag! issue! bitset! tuple! vector! image! block! list! paren! path! set-path! get-path! lit-path! map! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! callback! context! error! task! task-id! port! handle! struct! library! node! comment! KWATZ!]
-any-word!:		make typeset! [word! set-word! get-word! lit-word! issue! refinement!]
+any-type!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! pair! range! time! date! string! lit-string! binary! file! email! url! tag! issue! bitset! tuple! vector! image! block! list! paren! path! set-path! get-path! lit-path! map! datatype! typeset! word! set-word! get-word! lit-word! refinement! operator! function! routine! callback! context! error! task! task-id! port! handle! struct! library! node! comment! KWATZ!]
+any-word!:		make typeset! [word! set-word! get-word! lit-word! refinement!]
+immediate!:		make typeset! [unset! none! logic! integer! real! complex! percent! char! pair! range! time! date! lit-string! issue! tuple! datatype! typeset! word! set-word! get-word! lit-word! refinement! task-id!]
 number!:		make typeset! [integer! real! percent!]
 scalar!:		make typeset! [integer! real! complex! percent! char! pair! range! tuple! time!]
 series!:		make typeset! [string! binary! file! email! url! tag! block! list! paren! path! set-path! get-path! lit-path! KWATZ!]
@@ -462,8 +468,10 @@ forall: make function! [[
 	/local l result
 ][
 	word: get/at word body
-	l: - length? word
-	while [any [0 < length? word (skip' word l false)]] [
+	;l: - length? word
+	;while [any [0 < length? word (skip' word l false)]] [
+	l: -1 + index? word
+	while [any [0 < length? word (skip' head' word l false)]] [
 		result: do body
 		next' word
 		result
@@ -719,6 +727,7 @@ any-path?:		make function! [["True for any-path values." value][find any-path! t
 any-string?:	make function! [["True for any-string values." value][find any-string! type? :value]]
 any-type?:		make function! [["True for any-type values." value][find any-type! type? :value]]
 any-word?:		make function! [["True for any-word values." value][find any-word! type? :value]]
+immediate?:		make function! [["True for any-word values." value][find immediate! type? :value]]
 number?:		make function! [["True for number values." value][find number! type? :value]]
 scalar?:		make function! [["True for scalar values." value][find scalar! type? :value]]
 series?:		make function! [["True for series values." value][find series! type? :value]]
@@ -770,7 +779,7 @@ dump-obj: make function! [[
 	]]
 	clip-str: make function! [[[retain] str] [
 		trim/lines str
-		if (length? str) > 45 [str: append copy/part str 45 "..."]
+		if 43 < length? str [head' append clear skip' str 43 '"..."]
 		str
 	]]
 	form-val: make function! [[[retain] val] [
@@ -826,7 +835,7 @@ dump-obj: make function! [[
 		][
 			str: form-pad word 15
 			append str #" "
-			append str form-pad type 10 - ((length? str) - 15)
+			append str form-pad type 12 - ((length? str) - 15)
 			append out form reduce ["  " str form-val :val newline]
 		]
 	]
@@ -1394,7 +1403,11 @@ load: make function! [[
 			either library [
 				return load-library source
 			][
-				read source
+				either all [
+					as string! read/binary source
+				][
+					read source
+				]
 			]
 		]
 		url!	[read source]
@@ -1434,9 +1447,9 @@ load: make function! [[
 		]
 	]
 	if not any [	; NOT ANY because of /all
+		all
 		'World <> pick data 1
 		block! <> type? pick data 2
-		all
 	] [
 		remove/part data 2
 	]
@@ -1651,33 +1664,41 @@ change: make function! [[
 	/only '"Change a series as a series"
 	/free '"Free the old value"
 ][
+	if not part [
+		length: any [
+			if (find any-string! type? series) or (KWATZ! = type? series) [
+				any [
+					if tag! = type? :value [
+						2 + length? value
+					]
+					if find any-string! type? :value [
+						length? value
+					]
+					length? to string! :value
+				]
+			]
+			if only [1]
+			if (find any-block! type? series) or (list! = type? series) [
+				either find [block! list! paren!] type? :value [
+					length? value
+				][
+					1
+				]
+			]
+			1
+		]
+	]
 	either only [
-		insert/only either part [
-			either free [
-				remove/part/free series length
-			][
-				remove/part series length
-			]
+		insert/only either free [
+			remove/part/free series length
 		][
-			either free [
-				remove/free series
-			][
-				remove series
-			]
+			remove/part series length
 		] :value
 	][
-		insert either part [
-			either free [
-				remove/part/free series length
-			][
-				remove/part series length
-			]
+		insert either free [
+			remove/part/free series length
 		][
-			either free [
-				remove/free series
-			][
-				remove series
-			]
+			remove/part series length
 		] :value
 	]
 ]]
@@ -3749,7 +3770,7 @@ mold-series: make function! [[
 
 ; ---- print-last-error ----
 print-last-error: make function! [[
-	/local err id
+	/local str err id
 ][
 	if system/last-error/task-id <> 0 [
 		prin '"^/** Message from task: "
@@ -3758,17 +3779,21 @@ print-last-error: make function! [[
 		print system/last-error/task-name
 	]
 	err: select system/errors system/last-error/type
-	prin '"** "
-	prin err/type
-	prin '": "
 	id: select err system/last-error/id
-	print either block! = type? id [
-		compile/at id system/last-error
-	][
-		id
+	str: append copy "** " reduce [
+		err/type
+		'": "
+		either block! = type? id [
+			form reduce compile/at id system/last-error
+		][
+			id
+		]
 	]
-	prin '"** Near: "
-	print system/last-error/near
+	if 74 < length? str [head' append clear skip' str 74 '"..."]
+	print str
+	str: append copy "** Near: " system/last-error/near
+	if 74 < length? str [head' append clear skip' str 74 '"..."]
+	print str
 ]]
 
 
