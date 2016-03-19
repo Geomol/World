@@ -21,11 +21,13 @@ do-tests: make function! [[
 	while [0 < length? tests] [
 		if true <> do tests/1 [
 			print ["Failed:" mold tests/1 "^/^-in" file]
+			ok?: false
 		]
 		next' tests
 	]
 ]]
 
+ok?: true
 ;print "lexer"
 do-tests %lexer.w
 
@@ -79,4 +81,4 @@ if value? 'c [	; c is used as extern context in e.g. %datatypes/path.w
 	free c
 	c: none
 ]
-true
+ok?

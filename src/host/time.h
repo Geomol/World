@@ -11,10 +11,12 @@
 
 
 #ifdef WORLD_OF_WINDOWS
+#ifndef W_64BIT
 struct timespec {
 	time_t	tv_sec;
 	long	tv_nsec;
 };
+#endif
 #endif
 
 

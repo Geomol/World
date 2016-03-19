@@ -1,8 +1,13 @@
 World [
 	Title:		"Cortex Preferences"
-	Date:		2-Aug-2015
-	Version:	0.7.16
+	Date:		12-Oct-2015
+	Version:	0.7.20
 	History: [
+		0.7.20	[12-10-2015	JN	{Changed FIND/CASE back to FIND in tab-completion}]
+		0.7.19	[28-9-2015	JN	{Added system/schemes}]
+		0.7.18	[21-9-2015	JN	{Changed and' or' xor' to and? or? xor?}]
+		0.7.17	[9-8-2015	JN	{Added OPEN
+								 Changed net-utils to use local variables}]
 		0.7.16	[2-8-2015	JN	{Added immediate! and IMMEDIATE?
 								 Changed typeset! to an immediate!}]
 		0.7.15	[31-7-2015	JN	{Changed PRINT-LAST-ERROR to not output long strings}]
@@ -247,16 +252,105 @@ number!:		make typeset! [integer! real! percent!]
 scalar!:		make typeset! [integer! real! complex! percent! char! pair! range! tuple! time!]
 series!:		make typeset! [string! binary! file! email! url! tag! block! list! paren! path! set-path! get-path! lit-path! KWATZ!]
 
-\{
-system/schemes: make system/schemes [
-	http: make system/standard/socket-scheme [
-		title:	"HyperText Transport Protocol v1.1"
+system/schemes: make map! reduce [
+	'default make context! [
+		make-port: make function! [[
+			url [url!]
+		][
+			net-utils/URL-Parser/parse-url url
+		]]
+		read: make function! [[
+			'"Read from a url."
+			[retain]
+			url [url!]
+			/local scheme f
+		][
+			scheme: pick system/schemes net-utils/URL-Parser/get-scheme url
+			f: pick scheme 'read
+			f url
+		]]
 	]
-	tcp: make system/standard/socket-scheme [
-		title:	"TCP Networking"
+	'console make context! [
+		scheme: 'console
+		ref: [scheme: 'console]
+	]
+	'dir make context! [
+		scheme: 'dir
+		ref: none
+	]
+	'file make context! [
+		scheme: 'file
+		ref: none
+		size: 0
+	]
+	'tcp make context! [
+		title: '"Transmission Control Protocol"
+		scheme: 'tcp
+		ref: none
+		host: none
+		port-id: none
+		service: none
+		user: none
+		pass: none
+		target: none
+		path: none
 	]
 ]
-}
+system/ports/input: make port! [scheme: 'console]
+insert system/schemes reduce [
+	'http retain make system/schemes/tcp [
+		title:	'"HyperText Transport Protocol v1.1"
+		scheme:	'http
+		port-id:	80
+		service:	"80"
+		read: make function! [[
+			'"Read from a HTTP url."
+			[retain]
+			source [port! url!]
+			/local port line length chunked?
+		][
+			port: either url! = type? source [
+				net-utils/URL-Parser/parse-url source
+			] source
+			if not port/port-id [
+				port/port-id: 80
+				port/service: "80"
+			]
+			open-port port
+			;print "!! port opened"
+			write port join {GET / HTTP/1.1^/User-Agent: World Programming Language^/Host: } [
+				port/host
+				{^/Accept: */*^/^/}
+			]
+			wait port
+			line: system/words/read/lines/part port 1
+			;print line/1
+			if line/1 = "HTTP/1.1 200 OK" [
+				length: 0
+				chunked?: false
+				while [
+					line: system/words/read/lines/part port 1
+					;print line/1
+					if find/match line/1 "Content-Length: " [
+						length: pick load skip line/1 16 1
+					]
+					if find/match line/1 "Transfer-Encoding: chunked" [
+						chunked?: true
+					]
+					line/1 <> ""
+				] []
+				either chunked? [
+					line: system/words/read/lines/part port 1
+					append line/1 #"h"
+					as string! system/words/read/part port pick load line/1 1
+				][
+					as string! system/words/read/part port length
+					;system/words/read/lines/part port 4
+				]
+			]
+		]]
+	]
+]
 
 e:			2.718281828459045
 pi:			3.141592653589793
@@ -666,71 +760,71 @@ vector: make function! [[
 ]]
 
 ; Datatype
-none?:			make function! [["True for none values." value][none! = type? :value]]
-unset?:			make function! [["True for unset values." value][unset! = type? value]]
-logic?:			make function! [["True for logic value." value][logic! = type? :value]]
-integer?:		make function! [["True for integer values." value][integer! = type? :value]]
-real?:			make function! [["True for real values." value][real! = type? :value]]
-complex?:		make function! [["True for complex values." value][complex! = type? :value]]
-percent?:		make function! [["True for percent values." value][percent! = type? :value]]
-char?:			make function! [["True for char values." value][char! = type? :value]]
-pair?:			make function! [["True for pair values." value][pair! = type? :value]]
-range?:			make function! [["True for range values." value][range! = type? :value]]
-time?:			make function! [["True for time values." value][time! = type? :value]]
-date?:			make function! [["True for date values." value][date! = type? :value]]
-string?:		make function! [["True for string values." value][string! = type? :value]]
-lit-string?:	make function! [["True for lit-string values." value][lit-string! = type? :value]]
-binary?:		make function! [["True for binary values." value][binary! = type? :value]]
-file?:			make function! [["True for file values." value][file! = type? :value]]
-email?:			make function! [["True for email values." value][email! = type? :value]]
-url?:			make function! [["True for url values." value][url! = type? :value]]
-tag?:			make function! [["True for tag values." value][tag! = type? :value]]
-issue?:			make function! [["True for issue values." value][issue! = type? :value]]
-bitset?:		make function! [["True for bitset values." value][bitset! = type? :value]]
-tuple?:			make function! [["True for tuple values." value][tuple! = type? :value]]
-vector?:		make function! [["True for vector values." value][vector! = type? :value]]
-image?:			make function! [["True for image values." value][image! = type? :value]]
-block?:			make function! [["True for block values." value][block! = type? :value]]
-list?:			make function! [["True for list values." value][list! = type? :value]]
-paren?:			make function! [["True for paren values." value][paren! = type? :value]]
-path?:			make function! [["True for path values." value][path! = type? :value]]
-set-path?:		make function! [["True for set-path values." value][set-path! = type? :value]]
-get-path?:		make function! [["True for get-path values." value][get-path! = type? :value]]
-lit-path?:		make function! [["True for lit-path values." value][lit-path! = type? :value]]
-map?:			make function! [["True for map values." value][map! = type? :value]]
-datatype?:		make function! [["True for datatype values." value][datatype! = type? :value]]
-typeset?:		make function! [["True for typeset values." value][typeset! = type? :value]]
-word?:			make function! [["True for word values." value][word! = type? :value]]
-set-word?:		make function! [["True for set-word values." value][set-word! = type? :value]]
-get-word?:		make function! [["True for get-word values." value][get-word! = type? :value]]
-lit-word?:		make function! [["True for lit-word values." value][lit-word! = type? :value]]
-refinement?:	make function! [["True for refinement values." value][refinement! = type? :value]]
-operator?:		make function! [["True for operator values." value][operator! = type? :value]]
-function?:		make function! [["True for function values." value][function! = type? :value]]
-routine?:		make function! [["True for routine values." value][routine! = type? :value]]
-callback?:		make function! [["True for callback values." value][callback! = type? :value]]
-context?:		make function! [["True for context values." value][context! = type? :value]]
-error?:			make function! [["True for error values." value][error! = type? :value]]
-task?:			make function! [["True for task values." value][task! = type? :value]]
-task-id?:		make function! [["True for task-id values." value][task-id! = type? :value]]
-port?:			make function! [["True for port values." value][port! = type? :value]]
-library?:		make function! [["True for library values." value][library! = type? :value]]
-node?:			make function! [["True for node values." value][node! = type? :value]]
-comment?:		make function! [["True for comment values." value][comment! = type? :value]]
-KWATZ?:			make function! [["True for KWATZ values." value][KWATZ! = type? :value]]
-any-block?:		make function! [["True for any-block values." value][find any-block! type? :value]]
-any-context?:	make function! [["True for any-context values." value][find any-context! type? :value]]
-any-function?:	make function! [["True for any-function values." value][find any-function! type? :value]]
-;any-object?:	make function! [["True for any-object values." value][find any-object! type? :value]]
-any-paren?:		make function! [["True for any-paren values." value][find any-paren! type? :value]]
-any-path?:		make function! [["True for any-path values." value][find any-path! type? :value]]
-any-string?:	make function! [["True for any-string values." value][find any-string! type? :value]]
-any-type?:		make function! [["True for any-type values." value][find any-type! type? :value]]
-any-word?:		make function! [["True for any-word values." value][find any-word! type? :value]]
-immediate?:		make function! [["True for any-word values." value][find immediate! type? :value]]
-number?:		make function! [["True for number values." value][find number! type? :value]]
-scalar?:		make function! [["True for scalar values." value][find scalar! type? :value]]
-series?:		make function! [["True for series values." value][find series! type? :value]]
+none?:			make function! [['"True for none values." value][none! = type? :value]]
+unset?:			make function! [['"True for unset values." value][unset! = type? value]]
+logic?:			make function! [['"True for logic value." value][logic! = type? :value]]
+integer?:		make function! [['"True for integer values." value][integer! = type? :value]]
+real?:			make function! [['"True for real values." value][real! = type? :value]]
+complex?:		make function! [['"True for complex values." value][complex! = type? :value]]
+percent?:		make function! [['"True for percent values." value][percent! = type? :value]]
+char?:			make function! [['"True for char values." value][char! = type? :value]]
+pair?:			make function! [['"True for pair values." value][pair! = type? :value]]
+range?:			make function! [['"True for range values." value][range! = type? :value]]
+time?:			make function! [['"True for time values." value][time! = type? :value]]
+date?:			make function! [['"True for date values." value][date! = type? :value]]
+string?:		make function! [['"True for string values." value][string! = type? :value]]
+lit-string?:	make function! [['"True for lit-string values." value][lit-string! = type? :value]]
+binary?:		make function! [['"True for binary values." value][binary! = type? :value]]
+file?:			make function! [['"True for file values." value][file! = type? :value]]
+email?:			make function! [['"True for email values." value][email! = type? :value]]
+url?:			make function! [['"True for url values." value][url! = type? :value]]
+tag?:			make function! [['"True for tag values." value][tag! = type? :value]]
+issue?:			make function! [['"True for issue values." value][issue! = type? :value]]
+bitset?:		make function! [['"True for bitset values." value][bitset! = type? :value]]
+tuple?:			make function! [['"True for tuple values." value][tuple! = type? :value]]
+vector?:		make function! [['"True for vector values." value][vector! = type? :value]]
+image?:			make function! [['"True for image values." value][image! = type? :value]]
+block?:			make function! [['"True for block values." value][block! = type? :value]]
+list?:			make function! [['"True for list values." value][list! = type? :value]]
+paren?:			make function! [['"True for paren values." value][paren! = type? :value]]
+path?:			make function! [['"True for path values." value][path! = type? :value]]
+set-path?:		make function! [['"True for set-path values." value][set-path! = type? :value]]
+get-path?:		make function! [['"True for get-path values." value][get-path! = type? :value]]
+lit-path?:		make function! [['"True for lit-path values." value][lit-path! = type? :value]]
+map?:			make function! [['"True for map values." value][map! = type? :value]]
+datatype?:		make function! [['"True for datatype values." value][datatype! = type? :value]]
+typeset?:		make function! [['"True for typeset values." value][typeset! = type? :value]]
+word?:			make function! [['"True for word values." value][word! = type? :value]]
+set-word?:		make function! [['"True for set-word values." value][set-word! = type? :value]]
+get-word?:		make function! [['"True for get-word values." value][get-word! = type? :value]]
+lit-word?:		make function! [['"True for lit-word values." value][lit-word! = type? :value]]
+refinement?:	make function! [['"True for refinement values." value][refinement! = type? :value]]
+operator?:		make function! [['"True for operator values." value][operator! = type? :value]]
+function?:		make function! [['"True for function values." value][function! = type? :value]]
+routine?:		make function! [['"True for routine values." value][routine! = type? :value]]
+callback?:		make function! [['"True for callback values." value][callback! = type? :value]]
+context?:		make function! [['"True for context values." value][context! = type? :value]]
+error?:			make function! [['"True for error values." value][error! = type? :value]]
+task?:			make function! [['"True for task values." value][task! = type? :value]]
+task-id?:		make function! [['"True for task-id values." value][task-id! = type? :value]]
+port?:			make function! [['"True for port values." value][port! = type? :value]]
+library?:		make function! [['"True for library values." value][library! = type? :value]]
+node?:			make function! [['"True for node values." value][node! = type? :value]]
+comment?:		make function! [['"True for comment values." value][comment! = type? :value]]
+KWATZ?:			make function! [['"True for KWATZ values." value][KWATZ! = type? :value]]
+any-block?:		make function! [['"True for any-block values." value][find any-block! type? :value]]
+any-context?:	make function! [['"True for any-context values." value][find any-context! type? :value]]
+any-function?:	make function! [['"True for any-function values." value][find any-function! type? :value]]
+;any-object?:	make function! [['"True for any-object values." value][find any-object! type? :value]]
+any-paren?:		make function! [['"True for any-paren values." value][find any-paren! type? :value]]
+any-path?:		make function! [['"True for any-path values." value][find any-path! type? :value]]
+any-string?:	make function! [['"True for any-string values." value][find any-string! type? :value]]
+any-type?:		make function! [['"True for any-type values." value][find any-type! type? :value]]
+any-word?:		make function! [['"True for any-word values." value][find any-word! type? :value]]
+immediate?:		make function! [['"True for any-word values." value][find immediate! type? :value]]
+number?:		make function! [['"True for number values." value][find number! type? :value]]
+scalar?:		make function! [['"True for scalar values." value][find scalar! type? :value]]
+series?:		make function! [['"True for series values." value][find series! type? :value]]
 
 as-pair: make function! [[
 	'"Combine x and y values into a pair."
@@ -783,8 +877,8 @@ dump-obj: make function! [[
 		str
 	]]
 	form-val: make function! [[[retain] val] [
-		if any-block? :val [return form reduce ["length:" mold length? val]]
-		;if image? :val [return form reduce ["size:" val/size]]
+		if any-block? :val [return form reduce ['"length:" mold length? val]]
+		;if image? :val [return form reduce ['"size:" val/size]]
 		;if datatype? :val [return get in spec-of val 'title]
 		if any-function? :val [
 			either string! = type? pick pick :val 1 1 [
@@ -802,7 +896,7 @@ dump-obj: make function! [[
 			if find any-context! type? :val [val: words-of val]
 			;if typeset? :val [val: to-block val]
 			if port! = type? :val [val: reduce [val/scheme val/ref]]
-			;if gob? :val [return form reduce ["offset:" val/offset "size:" val/size]]
+			;if gob? :val [return form reduce ['"offset:" val/offset "size:" val/size]]
 		]
 		clip-str mold :val
 	]]
@@ -836,7 +930,7 @@ dump-obj: make function! [[
 			str: form-pad word 15
 			append str #" "
 			append str form-pad type 12 - ((length? str) - 15)
-			append out form reduce ["  " str form-val :val newline]
+			append out form reduce ['"  " str form-val :val newline]
 		]
 	]
 	out
@@ -888,49 +982,49 @@ More information: http://www.world-lang.org
 		types: dump-obj/match system/words :word
 		sort types
 		if 0 < length? types [
-			print ["Found these words:" newline types]
+			print ['"Found these words:" newline types]
 			exit
 		]
 		if all [word! = type? :word datatype! = type? get :word] [
-			print [mold :word "is a datatype!"]
+			print [mold :word '"is a datatype!"]
 			exit
 		]
-		print ["No information on" word "(word has no value)"]
+		print ['"No information on" word '"(word has no value)"]
 		exit
 	]
 	if all [word! <> type? :word path! <> type? :word] [
-		prin [mold :word "is "]
+		prin [mold :word '"is "]
 		print either find "aeiou" pick mold type? :word 1 [
-			["an" type? :word]
+			['"an" type? :word]
 		][
-			["a" type? :word]
+			['"a" type? :word]
 		]
 		exit
 	]
 	;value: either path? :word [first reduce reduce [word]] [get :word]
 	value: get :word
 	if false = find any-function! type? :value [
-		prin [mold word "is "]
+		prin [mold word '"is "]
 		prin either find "aeiou" pick mold type? :value 1 [
-			["an" type? :value "of value: "]
+			['"an" type? :value '"of value: "]
 		][
 			either context! = type? :value [
-				["a" type? :value "with content: "]
+				['"a" type? :value '"with content: "]
 			][
-				["a" type? :value "of value: "]
+				['"a" type? :value '"of value: "]
 			]
 		]
-		print either any-context? :value [print "" dump-obj :value] [mold :value]
+		print either any-context? :value [print '"" dump-obj :value] [mold :value]
 		exit
 	]
 	args: pick :value 1
-	prin "Usage:^/    "
+	prin '"Usage:^/    "
 	either operator! = type? :value [
 		item: args/1
 		while [word! <> type? :item] [
 			item: pick next' args 1
 		]
-		prin [mold :item mold word ""]
+		prin [mold :item mold word '""]
 		item: pick next' args 1
 		while [word! <> type? :item] [
 			item: pick next' args 1
@@ -944,7 +1038,7 @@ More information: http://www.world-lang.org
 						or (lit-string! = type? args/2))] [
 				if (string! <> type? :item) and (lit-string! <> type? :item)
 						and (block! <> type? :item) and (set-word! <> type? :item) [
-					prin ["" mold :item]
+					prin ['"" mold :item]
 				]
 				if set-word! = type? :item [
 					next' args
@@ -961,10 +1055,10 @@ More information: http://www.world-lang.org
 				arg-no: 1
 				while [0 < length? item] [
 					either word! = type? item/1 [
-						prin ["" mold item/1]
+						prin ['"" mold item/1]
 						next' item
 					][
-						prin " arg"
+						prin '" arg"
 						prin arg-no
 					]
 					next 'arg-no
@@ -979,16 +1073,16 @@ More information: http://www.world-lang.org
 	]
 	head' args
 	item: args/1
-	print "^/^/Description:"
+	print '"^/^/Description:"
 	if (string! = type? :item) or (lit-string! = type? :item) [
-		print ["   " item]
+		print ['"   " item]
 		item: pick next' args 1
 	]
-	prin ["   " mold word "is "]
+	prin ['"   " mold word '"is "]
 	print either find "aeiou" pick mold type? :value 1 [
-		["an" type? :value]
+		['"an" type? :value]
 	][
-		["a" type? :value]
+		['"a" type? :value]
 	]
 	if set-word! = type? :item [	; task-name
 		next' args
@@ -1002,40 +1096,40 @@ More information: http://www.world-lang.org
 	]
 	either find [operator! function! task!] type?/word :value [
 		if find [word! lit-word!] type?/word :item [
-			print "^/Arguments:"
+			print '"^/Arguments:"
 			while [item and (refinement! <> type? :item)] [
-				prin ["   " item "-- "]
+				prin ['"   " item '"-- "]
 				item: pick next' args 1
 				either item [
 					either (string! = type? :item) or (lit-string! = type? :item) [
-						prin [item "["]
+						prin [item '"["]
 						item: pick next' args 1
 						either block! = type? :item [
 							prin form item
-							prin "]"
+							prin '"]"
 							item: pick next' args 1
 						][
-							prin "any-type!]"
+							prin '"any-type!]"
 						]
 					][
 						either block! = type? :item [
 							item2: pick next' args 1
 							if (string! = type? :item2) or (lit-string! = type? :item2) [
-								prin [item2 ""]
+								prin [item2 '""]
 								item2: pick next' args 1
 							]
-							prin "["
+							prin '"["
 							prin form item
-							prin "]"
+							prin '"]"
 							item: :item2
 						][
-							prin "[any-type!]"
+							prin '"[any-type!]"
 						]
 					]
 				][
-					prin "[any-type!]"
+					prin '"[any-type!]"
 				]
-				print ""
+				print '""
 			]
 		]
 	][
@@ -1044,18 +1138,18 @@ More information: http://www.world-lang.org
 			item: args/1
 			if block! = type? :item [
 				if 0 < length? item [
-					print "^/Arguments:"
+					print '"^/Arguments:"
 					arg-no: 1
 					while [0 < length? item] [
 						either word! = type? item/1 [
-							prin ["   " item/1 "-- "]
+							prin ['"   " item/1 '"-- "]
 							next' item
 						][
-							prin "    arg"
-							prin [arg-no "-- "]
+							prin '"    arg"
+							prin [arg-no '"-- "]
 						]
 						either (string! = type? item/3) or (lit-string! = type? item/3) [
-							prin [item/3 ""]
+							prin [item/3 '""]
 							print mold item/1
 							next' item
 						][
@@ -1070,74 +1164,74 @@ More information: http://www.world-lang.org
 			item: args/1
 			if item <> 'void [
 				item: pick next' args 1
-				print "^/Return:"
+				print '"^/Return:"
 				either :item == none [
-					print "    (unknown)"
+					print '"    (unknown)"
 				][
-					print ["   " mold :item]
+					print ['"   " mold :item]
 				]
 			]
 		]
 	]
 	if (refinement! = type? :item) and ((:item <> /local) or (string! = type? args/2)
 			or (lit-string! = type? args/2)) [
-		print "^/Refinements:"
+		print '"^/Refinements:"
 		while [item and ((item <> /local) or (string! = type? args/2) or (lit-string! = type? args/2))] [
-			prin ["   " mold :item]
+			prin ['"   " mold :item]
 			item: pick next' args 1
 			if (string! = type? :item) or (lit-string! = type? :item) [
-				prin [" --" item]
+				prin ['" --" item]
 				item: pick next' args 1
 			]
-			print ""
+			print '""
 			if word! = type? :item [
 				while [item and (refinement! <> type? :item)] [
-					prin ["       " item "-- "]
+					prin ['"       " item '"-- "]
 					item: pick next' args 1
 					either item [
 						either (string! = type? :item) or (lit-string! = type? :item) [
-							prin [item "["]
+							prin [item '"["]
 							item: pick next' args 1
 							either block! = type? :item [
 								prin form item
-								prin "]"
+								prin '"]"
 								item: pick next' args 1
 							][
-								prin "any-type!]"
+								prin '"any-type!]"
 							]
 						][
 							either block! = type? :item [
 								item2: pick next' args 1
 								if (string! = type? :item2) or (lit-string! = type? :item2) [
-									prin [item2 ""]
+									prin [item2 '""]
 									item2: pick next' args 1
 								]
-								prin "["
+								prin '"["
 								prin form item
-								prin "]"
+								prin '"]"
 								item: :item2
 							][
-								prin "[any-type!]"
+								prin '"[any-type!]"
 							]
 						]
 					][
-						prin "[any-type!]"
+						prin '"[any-type!]"
 					]
-					print ""
+					print '""
 				]
 			]
 		]
 	]
 	if att [
-		print "^/Special attributes:"
+		print '"^/Special attributes:"
 		item: att/1
 		while [item] [
-			print ["   " mold :item]
+			print ['"   " mold :item]
 			item: pick next' att 1
 		]
 	]
 	head' args
-	prin ""
+	prin '""
 ]]
 ?: make function! reduce [pick :help 1 pick :help 2]
 \{
@@ -1148,7 +1242,7 @@ More information: http://www.world-lang.org
 ][
 	print either word! = type? :name [
 		s: form name
-		append s reduce [": " mold name: get :name]	; TODO Why get-word! (?? loop) ?
+		append s reduce ['": " mold name: get :name]	; TODO Why get-word! (?? loop) ?
 		s
 	][
 		mold :name
@@ -1159,36 +1253,37 @@ More information: http://www.world-lang.org
 source: make function! [[
 	'"Print the source code for a word."
 	'word [word!]
+	/local s
 ][
 	prin :word
 	print either value? :word [
 		either find [operator! function! routine! task!] type?/word :word [
-			[":" mold :word]
+			['":" mold :word]
 		][
-			[":" mold get word]
+			['":" mold get word]
 		]
 	][
-		" undefined"
+		'" undefined"
 	]
 	exit
 ]]
 
 ; Logic
-and': make function! [[
+and?: make function! [[
 	'"First value ANDed with the second."
 	value1
 	value2
 ][
 	:value1 and :value2
 ]]
-or': make function! [[
+or?: make function! [[
 	'"First value ORed with the second."
 	value1
 	value2
 ][
 	:value1 or :value2
 ]]
-xor': make function! [[
+xor?: make function! [[
 	'"First value XORed with the second."
 	value1
 	value2
@@ -1320,7 +1415,7 @@ random: make function! [[
 		either to-do [
 			do to-do/2
 		][
-			print ["** Error: cannot use random on" type? value "value"]
+			print ['"** Error: cannot use random on" type? value '"value"]
 		]
 	]
 ]]
@@ -1454,6 +1549,16 @@ load: make function! [[
 		remove/part data 2
 	]
 	bind data 'system
+]]
+open: make function! [[
+	'"Open a port."
+	spec [port! url!]
+][
+	open-port either url! = type? spec [
+		net-utils/URL-Parser/parse-url spec
+	][
+		spec
+	]
 ]]
 save: make function! [[
 	'"Save to a file"
@@ -1704,14 +1809,13 @@ change: make function! [[
 ]]
 
 parse-utils: make context! [
-istack: []
-level: 0
 
 bparse: make function! [[
 	'"Parse a block according to rules."
 	[retain]
-	input [block!] '"Input block to parse"
+	input [any-block!] '"Input block to parse"
 	rules [block!] '"Rules to parse by"
+	g [context!]
 	/case '"Use case-sensitive comparison"
 	/local keyword-rules type-rules
 	i j n keyword token var value dest status mark rules'
@@ -1734,23 +1838,24 @@ bparse: make function! [[
 		]
 		end [0 = length? input]
 		into [
-			either block! = type? input/1 [
+			either find any-block! type? input/1 [
 				either block! = type? :token [
-					insert/only istack input
-					insert istack level
-					level: 0
-					insert/only istack input/1
-					status: bparse input/1 token
-					level: istack/1
-					remove istack
+					insert/only g/istack input
+					insert g/istack g/level
+					g/level: 0
+					insert/only g/istack input/1
+					status: bparse input/1 token g
+					g/level: g/istack/1
+					remove g/istack
 					if status [
-						input: istack/1
+						input: g/istack/1
 						next' input
 					]
-					remove istack
+					remove g/istack
 					status
 				][
-					make error! join "PARSE - invalid argument: " :token
+					clear g/istack
+					make error! join '"PARSE - invalid argument: " :token
 				]
 			][
 				false
@@ -1836,10 +1941,10 @@ bparse: make function! [[
 			true
 		]
 		block! [
-			insert/only istack input
-			either bparse copy/shallow input token [
-				input: istack/1
-				remove istack
+			insert/only g/istack input
+			either bparse copy/shallow input token g [
+				input: g/istack/1
+				remove g/istack
 				true
 			][
 				false
@@ -1874,10 +1979,10 @@ bparse: make function! [[
 	]
 
 	;input: skip input 0
-	;insert/only istack skip input 0
-	;insert/only istack copy/shallow input
+	;insert/only g/istack skip input 0
+	;insert/only g/istack copy/shallow input
 
-	level: level + 1
+	g/level: g/level + 1
 	mark: none
 
 	status: true
@@ -1904,7 +2009,8 @@ bparse: make function! [[
 				]	; get-token end
 				switch type?/word :token [
 					none! [
-						make error! join "PARSE - unexpected end of rule after: " i
+						clear g/istack
+						make error! join '"PARSE - unexpected end of rule after: " i
 					]
 					integer! [
 						j: token
@@ -1918,7 +2024,8 @@ bparse: make function! [[
 						]	; get-token end
 						switch type?/word :token [
 							none! [
-								make error! join "PARSE - unexpected end of rule after: " j
+								clear g/istack
+								make error! join '"PARSE - unexpected end of rule after: " j
 							]
 							word! [
 								either find [end skip |] token [
@@ -1984,7 +2091,8 @@ bparse: make function! [[
 						var: rules'/1
 						next' rules'
 						if word! <> type? :var [
-							make error! join "PARSE - invalid argument: " :var
+							clear g/istack
+							make error! join '"PARSE - invalid argument: " :var
 						]
 					]
 					set [
@@ -1992,7 +2100,8 @@ bparse: make function! [[
 						var: rules'/1
 						next' rules'
 						if word! <> type? :var [
-							make error! join "PARSE - invalid argument: " :var
+							clear g/istack
+							make error! join '"PARSE - invalid argument: " :var
 						]
 						;get-token
 						token: rules'/1
@@ -2103,7 +2212,8 @@ bparse: make function! [[
 							:token == 'end
 						]
 					] [
-						make error! join "PARSE - invalid argument: " :token
+						clear g/istack
+						make error! join '"PARSE - invalid argument: " :token
 					]
 					status: switch keyword keyword-rules
 					if mark [
@@ -2139,7 +2249,7 @@ bparse: make function! [[
 			]
 		]
 		if not status [
-			input: copy/shallow istack/1
+			input: copy/shallow g/istack/1
 			if all [rules' rules': find rules' '|] [
 				if 0 = length? next' rules' [
 					status: true
@@ -2147,18 +2257,18 @@ bparse: make function! [[
 			]
 		]
 	]
-	level: level - 1
-	either level > 0 [
+	g/level: g/level - 1
+	either g/level > 0 [
 		either status [
-			;dest: istack/1
+			;dest: g/istack/1
 			;skip' dest (index? input) - index? dest
-			insert/only remove istack input
+			insert/only remove g/istack input
 		][
-			remove istack
+			remove g/istack
 		]
 		return status
 	][
-		remove istack
+		remove g/istack
 		either status and (0 = length? input) [
 			return true
 		][
@@ -2204,6 +2314,7 @@ sparse: make function! [[
 	[retain]
 	input [string!] '"Input string to parse"
 	rules [block! string! none!] '"Rules to parse by"
+	g [context!]
 	/all '"Parse all chars including spaces"
 	/case '"Use case-sensitive comparison"
 	/local keyword-rules type-rules
@@ -2217,11 +2328,11 @@ sparse: make function! [[
 	]
 	switch type?/word rules' [
 		none! [
-			remove istack
+			remove g/istack
 			split-string input make bitset! either all ["^/"] ["^-^/ ,;"]
 		]
 		string! [
-			remove istack
+			remove g/istack
 			split-string input make bitset! insert either all ["^/"] ["^-^/ ,;"] rules'
 		]
 		block! [
@@ -2373,20 +2484,20 @@ sparse: make function! [[
 					]
 				]
 				block! [
-					insert istack input
+					insert g/istack input
 					either all [
 						either case [
-							either sparse/all/case copy/shallow input token [
-								input: istack/1
-								remove istack
+							either sparse/all/case copy/shallow input token g [
+								input: g/istack/1
+								remove g/istack
 								true
 							][
 								false
 							]
 						][
-							either sparse/all copy/shallow input token [
-								input: istack/1
-								remove istack
+							either sparse/all copy/shallow input token g [
+								input: g/istack/1
+								remove g/istack
 								true
 							][
 								false
@@ -2394,17 +2505,17 @@ sparse: make function! [[
 						]
 					][
 						either case [
-							either sparse/case copy/shallow input token [
-								input: istack/1
-								remove istack
+							either sparse/case copy/shallow input token g [
+								input: g/istack/1
+								remove g/istack
 								true
 							][
 								false
 							]
 						][
-							either sparse copy/shallow input token [
-								input: istack/1
-								remove istack
+							either sparse copy/shallow input token g [
+								input: g/istack/1
+								remove g/istack
 								true
 							][
 								false
@@ -2417,16 +2528,15 @@ sparse: make function! [[
 					true
 				]
 				datatype! [
-					make error! join "PARSE - invalid rule: " token
+					make error! join '"PARSE - invalid rule: " token
 				]
 			]
 
 			;input: skip input 0
-			;insert/only istack skip input 0
-			;insert istack input
-			;probe istack
+			;insert/only g/istack skip input 0
+			;insert g/istack input
 
-			level: level + 1
+			g/level: g/level + 1
 			mark: none
 
 			status: true
@@ -2454,7 +2564,7 @@ sparse: make function! [[
 						]	; get-token end
 						switch/default type?/word :token [
 							none! [
-								make error! join "PARSE - unexpected end of rule after: " i
+								make error! join '"PARSE - unexpected end of rule after: " i
 							]
 							char! bitset! block! paren! datatype! []
 							integer! [
@@ -2469,7 +2579,7 @@ sparse: make function! [[
 								]	; get-token end
 								switch/default type?/word :token [
 									none! [
-										make error! join "PARSE - unexpected end of rule after: " j
+										make error! join '"PARSE - unexpected end of rule after: " j
 									]
 									char! bitset! block! paren! datatype! []
 									word! [
@@ -2555,7 +2665,7 @@ sparse: make function! [[
 								var: rules'/1
 								next' rules'
 								if word! <> type? :var [
-									make error! join "PARSE - invalid argument: " :var
+									make error! join '"PARSE - invalid argument: " :var
 								]
 							]
 						]
@@ -2683,7 +2793,7 @@ sparse: make function! [[
 									]
 								]
 							] [
-								make error! join "PARSE - invalid argument: " :token
+								make error! join '"PARSE - invalid argument: " :token
 							]
 							status: switch keyword keyword-rules
 							if mark [
@@ -2725,7 +2835,7 @@ sparse: make function! [[
 					]
 				]
 				if not status [
-					input: copy/shallow istack/1
+					input: copy/shallow g/istack/1
 					if rules' [
 						if rules': find rules' '| [
 							if 0 = length? next' rules' [
@@ -2739,18 +2849,18 @@ sparse: make function! [[
 			if not all [
 				while [if 0 < length? input [if find sp input/1 [true]]] [next' input]
 			]
-			level: level - 1
-			either level > 0 [
+			g/level: g/level - 1
+			either g/level > 0 [
 				either status [
-					;dest: istack/1
+					;dest: g/istack/1
 					;skip' dest (index? input) - index? dest
-					insert remove istack input
+					insert remove g/istack input
 				][
-					remove istack
+					remove g/istack
 				]
 				return status
 			][
-				remove istack
+				remove g/istack
 				either status and (0 = length? input) [
 					return true
 				][
@@ -2768,32 +2878,43 @@ set 'parse make function! [[
 	rules [block! string! none!] '"Rules to parse by"
 	/all '"Parse all chars including spaces"
 	/case '"Use case-sensitive comparison"
+	/local g
 ][
-	clear istack
-	level: 0
-
+	if not find [block! string! none!] type? rules [
+		make error! "parse expected rules argument of type: block! string! none!"
+	]
 	switch/default type?/word input [
 		block! paren! path! [
-			insert/only istack copy/shallow input
+			g: make context! [
+				;istack: reduce [copy/shallow input]
+				istack: make block! 4
+				level: 0
+			]
+			insert/only g/istack copy/shallow input
 			either case [
-				bparse/case copy/shallow input rules
+				bparse/case copy/shallow input rules g
 			][
-				bparse copy/shallow input rules
+				bparse copy/shallow input rules g
 			]
 		]
 		string! binary! file! email! url! tag! KWATZ! [
-			insert istack as string! input
+			g: make context! [
+				;istack: reduce [as string! input]
+				istack: make block! 4
+				level: 0
+			]
+			insert g/istack as string! input
 			either all [
 				either case [
-					sparse/all/case as string! copy/shallow input rules
+					sparse/all/case as string! copy/shallow input rules g
 				][
-					sparse/all as string! copy/shallow input rules
+					sparse/all as string! copy/shallow input rules g
 				]
 			][
 				either case [
-					sparse/case as string! copy/shallow input rules
+					sparse/case as string! copy/shallow input rules g
 				][
-					sparse as string! copy/shallow input rules
+					sparse as string! copy/shallow input rules g
 				]
 			]
 		]
@@ -2823,7 +2944,7 @@ bitset: make function! [[
 			]
 			mark: (
 				if 0 < length? mark [
-					make error! join "invalid argument: " pick mark 1
+					make error! join '"invalid argument: " pick mark 1
 				]
 			)
 		]
@@ -3147,14 +3268,14 @@ enbase: make function! [[
 				ptr: copy/shallow value
 				while [0 < length? ptr] [
 					c: ptr/1
-					append result either 128 and c = 128 ["1"] ["0"]
-					append result either 64 and c = 64 ["1"] ["0"]
-					append result either 32 and c = 32 ["1"] ["0"]
-					append result either 16 and c = 16 ["1"] ["0"]
-					append result either 8 and c = 8 ["1"] ["0"]
-					append result either 4 and c = 4 ["1"] ["0"]
-					append result either 2 and c = 2 ["1"] ["0"]
-					append result either 1 and c = 1 ["1"] ["0"]
+					append result either 128 and c = 128 ['"1"] ['"0"]
+					append result either 64 and c = 64 ['"1"] ['"0"]
+					append result either 32 and c = 32 ['"1"] ['"0"]
+					append result either 16 and c = 16 ['"1"] ['"0"]
+					append result either 8 and c = 8 ['"1"] ['"0"]
+					append result either 4 and c = 4 ['"1"] ['"0"]
+					append result either 2 and c = 2 ['"1"] ['"0"]
+					append result either 1 and c = 1 ['"1"] ['"0"]
 					next' ptr
 				]
 				return result
@@ -4032,7 +4153,8 @@ tab-completion: make function! [[
 	l: length? s
 	forall values [
 		if l <= length? pick values 1 [
-			if find/case/match pick values 1 s [
+			;if find/case/match pick values 1 s [
+			if find/match pick values 1 s [
 				append selected pick values 1
 			]
 		]
@@ -4073,6 +4195,7 @@ tab-completion: make function! [[
 			]
 		]
 	]
+	if (path! = type? loaded) and (0 < length? result) [poke result length? result #"/"]
 	result
 ]]
 
@@ -4084,57 +4207,82 @@ net-utils: make context! [
 
 URL-Parser: make context! [
 
-scheme: user: pass: host: port-id: path: target: tag: none
-
 digit: make bitset! "0123456789"
-alpha-num: make bitset! "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+;alpha-num: make bitset! "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 scheme-char: make bitset! "+-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 path-char: make bitset!
 	"!$%&'()*+,-.0123456789;=@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 user-char: make bitset!
 	"!$%&'()*+,-.0123456789;=ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 
-mark: none
-
-url-rules: [scheme-part user-part host-part path-part file-part tag-part]
-scheme-part: [copy scheme some scheme-char #":" ["//" | none]]
-user-part: [
-	copy user [uchars #"@" uchars] [#":" pass-part | none] #"@"
-	;| (free user free pass user: pass: none) copy user uchars [#":" pass-part | none] #"@"
-	;| none (free user free pass user: pass: none)
-	| copy user uchars [#":" pass-part | none] #"@"
-	| none
-]
-pass-part: [copy pass to #"@"]
-host-part: [copy host uchars [#":" copy port-id digits | none]]
-path-part: [slash copy path path-node | none]
-path-node: [pchars slash path-node | none]
-file-part: [copy target pchars | none]
-tag-part: [#"#" copy tag pchars | none]
-uchars: [some user-char | none]
-pchars: [some path-char | none]
-digits: [1 5 digit]
-
 parse-url: make function! [[
 	'"Create URL dataset."
-	port [port!]
+	;port [port!]
 	url [url!]
+	/local scheme' user' pass' host' port-id' path' target' tag'
+	url-rules scheme-part user-part pass-part host-part path-part path-node file-part tag-part
+	uchars pchars digits
 ][
-	free-all [scheme user pass host port-id path target tag]
-	scheme: user: pass: host: port-id: path: target: tag: none
+	url-rules: [
+		scheme-part
+		user-part
+		host-part
+		path-part
+		file-part
+		tag-part
+	]
+	scheme-part: [copy scheme' some scheme-char #":" ["//" | none]]
+	user-part: [
+		copy user' [uchars #"@" uchars] [#":" pass-part | none] #"@"
+		| copy user' uchars [#":" pass-part | none] #"@"
+		| (user': none) none
+	]
+	pass-part: [copy pass' to #"@"]
+	host-part: [copy host' uchars [#":" copy port-id' digits | none]]
+	path-part: [slash copy path' path-node | none]
+	path-node: [pchars slash path-node | none]
+	file-part: [copy target' pchars | none]
+	tag-part: [#"#" copy tag' pchars | none]
+	uchars: [some user-char | none]
+	pchars: [some path-char | none]
+	digits: [1 5 digit]
 
 	if parse/all url url-rules [
-		retain-all [scheme user pass host port-id path target tag]
-		if user [set/at 'user copy user port]				;port/user: user
-		if pass [set/at 'pass copy pass port]				;port/pass: pass
-		if host [set/at 'host copy host port]				;port/host: host
-		if port-id [set/at 'port-id copy port-id port]		;port/port-id: to integer! port-id
-		if path [set/at 'path copy path port]				;port/path: path
-		if target [set/at 'target copy target port]			;port/target: target
-		;if all [set-scheme scheme] [port/scheme: to-word scheme]
-		if scheme [set/at 'scheme pick load scheme 1 port]	;port/scheme: to word! scheme
+	\{
+		if user' [set/at 'user copy user' port]				;port/user: user'
+		if pass' [set/at 'pass copy pass' port]				;port/pass: pass'
+		if host' [set/at 'host copy host' port]				;port/host: host'
+		if port-id' [
+			set/at 'port-id to integer! port-id' port		;port/port-id: to integer! port-id'
+			set/at 'service copy port-id' port				;port/service: port-id'
+		]
+		if path' [set/at 'path copy path' port]				;port/path: path'
+		if target' [set/at 'target copy target' port]		;port/target: target'
+		;if all [set-scheme scheme'] [port/scheme: to-word scheme']
+		if scheme' [set/at 'scheme pick load scheme' 1 port]	;port/scheme: to word! scheme'
 		port
+	}
+		make port! [
+			scheme: pick load scheme' 1
+			if host' [set/local 'host retain copy host']
+			if port-id' [
+				set/local 'port-id to integer! port-id'
+				set/local 'service retain copy port-id'
+			]
+			if user' [set/local 'user retain copy user']
+			if pass' [set/local 'pass retain copy pass']
+			if target' [set/local 'target retain copy target']
+			if path' [set/local 'path retain copy path']
+		]
 	]
+]]
+get-scheme: make function! [[
+	'"Get scheme from url."
+	url [url!]
+	/local scheme
+][
+	parse url [copy scheme some scheme-char #":" to end]
+	pick to block! scheme 1
 ]]
 
 ]	; URL-Parser

@@ -230,7 +230,7 @@ match: make function! [[
 		if path! = type? pattern [
 			either value? word: pick pattern 1 [
 				word: get word
-				either (file! = type? word) and (#"/" = pick word length? word) [
+				either all [file! = type? :word #"/" = pick word length? word] [
 					append copy word next pattern
 				][
 					to file! pattern
@@ -240,10 +240,10 @@ match: make function! [[
 			]
 		]
 		if word! = type? pattern [
-			to file! either value? pattern [
+			either all [value? pattern file! = type? get pattern] [
 				get pattern
 			][
-				pattern
+				to file! pattern
 			]
 		]
 		if refinement! = type? pattern [to file! mold pattern]

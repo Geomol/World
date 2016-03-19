@@ -3,5 +3,6 @@
 [#{} == make binary! 0]
 [#{00} == to binary! "^@"]
 [#{09} == to binary! [#"^-"]]
+[#{010203} == to binary! 1.2.3]
 [binary! <> #{}]
 [binary! == type? #{}]

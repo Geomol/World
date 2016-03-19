@@ -14,3 +14,11 @@
 [(reduce [datatype!]) == find/last reduce [datatype!] datatype!]
 
 ["cd" == find'/match "abcd" "ab"]
+
+[
+	a: make bitset! "0123456789"
+	b: "1e12M_Sun"
+	find'/last b a
+	next' b
+	"M_Sun" == b
+]

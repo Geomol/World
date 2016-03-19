@@ -1,3 +1,55 @@
+19-Mar-2016
+-----------
+
+- Added support for calling functions with refinements within contexts (path compiling)
+- Added support for values of type struct! to POKE of vectors of pointers
+- Added support for TO integer! <handle>
+- Added support for TO handle! <vector>
+- Added support for parsing sub-blocks of type any-block! using INTO keyword in PARSE rules
+- Changed naming of functions AND'/OR'/XOR' to AND?/OR?/XOR? in %cortex.w
+- Changed TO string! NONE to return empty string ""
+- Changed SEND to treat values of type paren! and any-path! as single values
+- Changed SEND to return the MESSAGE argument
+- Changed SEND to give error, if MESSAGE argument is of type none!
+- Fixed bug in SEND / RECEIVE regarding typecheck and memory handling
+- Changed TO binary! of a value of type tuple!
+- Changed tab-completion at prompt for paths to end on "/"
+- Changed tab-completion back to use FIND instead of FIND/CASE (Let's see, how it goes.)
+- Added support for any-word! as CONTEXT argument to BIND (had word! before)
+- Reimplemented REDUCE to support multitasking when reducing blocks
+- Fixed bug related to context creation and block binding
+- Fixed bug related to creation of new (local) variables in tasks
+	(They will be local, even if same variable wasn't found in main task.)
+- Fixed bug related to TRY and compiling
+- Fixed bug related to EXIT in scripts outside any function,
+	when scripts are executed with DO from within a function
+- Fixed bug when calling routing with NONE argument for pointers (treated as NULL)
+- Fixed bug with FIND' <string> <bitset>, where string wasn't updated
+- Added new mezzanine HOLD (somehow similar to ALSO in Rebol)
+- Added more tests
+
+Changes related to networking:
+
+- Changed OPEN from a native to a mezzanine in %cortex.w
+- Added native OPEN-PORT
+- Removed TCP and LISTEN port types from AGGREGATE argument for PICK
+- Removed TCP port type from VALUE argument for COPY
+- Added TCP and LISTEN port types to SOURCE argument for READ
+- Added /PART refinement to READ (to be used with socket ports)
+- Added /LINES refinement to READ (to be used with socket ports)
+- Added /LINES refinement to LENGTH? (to be used with socket ports)
+- Removed port! from SERIES argument for INSERT
+- Added port! to DESTINATION argument for WRITE
+- Added /PART refinement to WRITE (to be used with socket ports)
+- Changed system/schemes/socket to system/schemes/tcp
+- Moved system/schemes definitions from internal to %cortex.w
+- Changed system/schemes from a context! to a map! datatype
+- Added scheme actors for MAKE port! <url> and READ <url>
+- Added simple HTTP read actor (very basic functionalty)
+
+- Other minor additions, changes, and bug fixes
+
+
 2-Aug-2015
 ----------
 
