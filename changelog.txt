@@ -23,7 +23,7 @@
 - Fixed bug related to TRY and compiling
 - Fixed bug related to EXIT in scripts outside any function,
 	when scripts are executed with DO from within a function
-- Fixed bug when calling routing with NONE argument for pointers (treated as NULL)
+- Fixed bug when calling routine with NONE argument for pointers (treated as NULL)
 - Fixed bug with FIND' <string> <bitset>, where string wasn't updated
 - Added new mezzanine HOLD (somehow similar to ALSO in Rebol)
 - Added more tests
