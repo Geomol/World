@@ -45,7 +45,7 @@ Changes related to networking:
 - Moved system/schemes definitions from internal to %cortex.w
 - Changed system/schemes from a context! to a map! datatype
 - Added scheme actors for MAKE port! <url> and READ <url>
-- Added simple HTTP read actor (very basic functionalty)
+- Added simple HTTP read actor (very basic functionality)
 
 - Other minor additions, changes, and bug fixes
 
